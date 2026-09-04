@@ -641,6 +641,6 @@ async def admin_login_page(request: Request):
 @app.post("/admin", response_class=HTMLResponse)
 async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        return templates.TemplateResponse("admin_dashboard.html", {"request": request})
+        return templates.TemplateResponse("dashboard.html", {"request": request})
     else:
         return templates.TemplateResponse("admin_login.html", {"request": request, "error": "Invalid Username or Password!"})
