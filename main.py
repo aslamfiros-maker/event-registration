@@ -87,8 +87,9 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
 # -------------------------------------------------------------
 
 @app.get("/", response_class=HTMLResponse)
-async def registration_home(request: Request):
-    return templates.TemplateResponse("register.html", {"request": request})
+async def home_registration(request: Request):
+    return templates.TemplateResponse(request=request, name="register.html")
+
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def index_page(request: Request):
