@@ -93,6 +93,8 @@ async def home_redirect():
 
 @app.get("/dashboard", response_class=HTMLResponse)
 def index_page(request: Request):
+    if request.cookies.get("admin_session") != "authenticated":
+        return RedirectResponse (url="/admin")
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM events ORDER BY event_date DESC, id DESC;")
@@ -651,7 +653,8 @@ async def admin_login_page(request: Request):
 @app.post("/admin", response_class=HTMLResponse)
 async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        return RedirectResponse(url="/dashboard", status_code=303)
+        response = RedirectResponse(url="/dashboard", status_code=303)
+        response.set_cookie("admin_session"),value="authenticated", httponly=True
     else:
         return templates.TemplateResponse(
             request=request, 
