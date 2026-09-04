@@ -1,0 +1,301 @@
+{% extends "base.html" %}
+
+{% block title %}Final Report - {{ event.title }} - EventPulse{% endblock %}
+
+{% block extra_head %}
+<!-- Chart.js for data visualization -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+    @media print {
+        header, .no-print, nav, #toast-container { display: none !important; }
+        body { background-color: #ffffff !important; }
+        .page-break { page-break-after: always; }
+        .report-box { border: 1px solid #e2e8f0 !important; box-shadow: none !important; }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top Action Bar (No-Print) -->
+    <div class="no-print bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 mb-1">
+                <span class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-purple-50 text-purple-700 border border-purple-200">
+                    Executive Analytics
+                </span>
+                <span class="text-xs text-slate-400">&bull; Generated {{ report_generated_at }}</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900">{{ event.title }} - Final Event Report</h1>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+            <button onclick="window.print()" class="px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center space-x-1.5">
+                <i data-lucide="printer" class="w-4 h-4"></i>
+                <span>Print / Save PDF</span>
+            </button>
+            <a href="/api/events/{{ event.id }}/export/excel" class="px-4 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-md shadow-emerald-600/20 transition flex items-center space-x-1.5">
+                <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                <span>Export Full Excel (.xlsx)</span>
+            </a>
+            <a href="/events/{{ event.id }}" class="px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center space-x-1">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Back</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Printable Header Section -->
+    <div class="report-box bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 sm:p-8 space-y-6">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-6 border-b border-slate-100">
+            <div>
+                <span class="text-xs font-bold uppercase tracking-widest text-brand-600">Event Execution & Attendance Summary</span>
+                <h2 class="text-2xl sm:text-3xl font-black text-slate-900 mt-1">{{ event.title }}</h2>
+                <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-500 mt-2">
+                    <span><strong>Date:</strong> {{ event.event_date }}</span>
+                    <span>&bull;</span>
+                    <span><strong>Timing:</strong> {{ event.start_time }} - {{ event.end_time }}</span>
+                    <span>&bull;</span>
+                    <span><strong>Venue:</strong> {{ event.venue }}</span>
+                    <span>&bull;</span>
+                    <span><strong>Format:</strong> {{ event.location_type }}</span>
+                </div>
+            </div>
+            <div class="shrink-0 text-right sm:border-l sm:pl-6 border-slate-200">
+                <span class="text-xs text-slate-400 font-semibold uppercase tracking-wider">Overall Turnout</span>
+                <div class="text-3xl sm:text-4xl font-black text-brand-600 mt-0.5">{{ attendance_rate }}%</div>
+                <span class="text-xs font-semibold text-slate-500">{{ attended_count }} of {{ total_registered }} attended</span>
+            </div>
+        </div>
+
+        <!-- 4 Core Executive Metric Cards -->
+        <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="p-4 rounded-2xl bg-slate-50 border border-slate-200/70">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-slate-500">Pre-Registrations</span>
+                <p class="text-2xl font-black text-slate-900 mt-1">{{ total_registered }}</p>
+                <span class="text-[11px] text-slate-400">{{ event.max_capacity }} Max Capacity</span>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-emerald-50/70 border border-emerald-200">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-emerald-700">Present (Checked In)</span>
+                <p class="text-2xl font-black text-emerald-700 mt-1">{{ attended_count }}</p>
+                <span class="text-[11px] text-emerald-600 font-semibold">{{ attendance_rate }}% of registrations</span>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-amber-50/70 border border-amber-200">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-amber-700">No-Shows (Absent)</span>
+                <p class="text-2xl font-black text-amber-700 mt-1">{{ absent_count }}</p>
+                <span class="text-[11px] text-amber-600 font-semibold">{{ 100 - attendance_rate }}% non-attendance</span>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-indigo-50/70 border border-indigo-200">
+                <span class="text-[11px] font-bold uppercase tracking-wider text-indigo-700">Walk-in Registrations</span>
+                <p class="text-2xl font-black text-indigo-700 mt-1">{{ walkin_count }}</p>
+                <span class="text-[11px] text-indigo-600 font-semibold">On-the-spot entries</span>
+            </div>
+        </div>
+
+        <!-- Analytics Charts Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 pt-4">
+            <!-- Chart 1: Attendance Breakdown Donut (4 Cols) -->
+            <div class="lg:col-span-4 p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 flex flex-col items-center justify-center text-center">
+                <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-4">Attendance Turnout</h3>
+                <div class="w-48 h-48 relative">
+                    <canvas id="turnoutChart"></canvas>
+                </div>
+                <div class="mt-4 flex justify-center space-x-4 text-xs font-semibold">
+                    <span class="flex items-center space-x-1.5 text-emerald-700">
+                        <span class="w-3 h-3 rounded-full bg-emerald-500"></span>
+                        <span>Attended ({{ attended_count }})</span>
+                    </span>
+                    <span class="flex items-center space-x-1.5 text-amber-700">
+                        <span class="w-3 h-3 rounded-full bg-amber-500"></span>
+                        <span>Absent ({{ absent_count }})</span>
+                    </span>
+                </div>
+            </div>
+
+            <!-- Chart 2: Arrival Distribution Curve (8 Cols) -->
+            <div class="lg:col-span-8 p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 flex flex-col justify-between">
+                <div>
+                    <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500 mb-1">Check-in Arrival Timeline (Rush Hours)</h3>
+                    <p class="text-[11px] text-slate-400">Distribution of attendee arrivals across the event hours</p>
+                </div>
+                <div class="h-56 mt-3">
+                    <canvas id="arrivalChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- Absence Reason Analysis Section -->
+        <div class="p-5 rounded-2xl bg-slate-50/70 border border-slate-200/80 space-y-3">
+            <h3 class="text-xs font-bold uppercase tracking-wider text-slate-500">No-Show / Absentee Reason Breakdown</h3>
+            <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3 text-xs">
+                {% for r_cat, count in reason_counts.items() %}
+                <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                    <span class="text-[10px] text-slate-400 uppercase font-semibold block truncate">{{ r_cat }}</span>
+                    <p class="text-lg font-black text-slate-800 mt-0.5">{{ count }}</p>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Complete Attendee & Check-in Ledger -->
+    <div class="report-box bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h3 class="text-base font-bold text-slate-900">Comprehensive Event Ledger</h3>
+                <p class="text-xs text-slate-500">Detailed list of all registered participants, attendance status, and check-in times</p>
+            </div>
+            <div class="no-print flex items-center space-x-2">
+                <input type="text" id="report-search" oninput="filterReportTable()" placeholder="Search ledger..." class="px-3.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs text-slate-600" id="report-table">
+                <thead class="bg-slate-50 border-b border-slate-200/80 text-[10px] uppercase tracking-wider text-slate-500 font-bold">
+                    <tr>
+                        <th class="py-3 px-4">#</th>
+                        <th class="py-3 px-4">Pass Code</th>
+                        <th class="py-3 px-4">Attendee Name</th>
+                        <th class="py-3 px-4">Contact</th>
+                        <th class="py-3 px-4">Organization / Role</th>
+                        <th class="py-3 px-4">Status</th>
+                        <th class="py-3 px-4">Check-in Time</th>
+                        <th class="py-3 px-4">Absent Follow-up Status</th>
+                        <th class="py-3 px-4">Absence Reason</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for a in attendees %}
+                    {% set fup = a.followup %}
+                    <tr class="hover:bg-slate-50/80 transition report-row" data-search="{{ a.full_name|lower }} {{ a.email|lower }} {{ a.ticket_code|lower }} {{ a.organization|lower or '' }}">
+                        <td class="py-3 px-4 text-slate-400 font-mono">{{ loop.index }}</td>
+                        <td class="py-3 px-4 font-mono font-bold text-brand-700">{{ a.ticket_code }}</td>
+                        <td class="py-3 px-4 font-bold text-slate-900">
+                            {{ a.full_name }}
+                            {% if a.is_walkin %}
+                            <span class="ml-1 px-1 py-0.5 text-[9px] bg-indigo-50 text-indigo-700 font-bold rounded">Walk-in</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            <div>{{ a.email }}</div>
+                            <div class="text-[11px] text-slate-400 font-mono">{{ a.phone or '' }}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            <div>{{ a.organization or '-' }}</div>
+                            <div class="text-[11px] text-slate-400">{{ a.role or '' }}</div>
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if a.status == 'Attended' %}
+                            <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 font-bold text-[10px]">
+                                <i data-lucide="check" class="w-3 h-3"></i>
+                                <span>Attended</span>
+                            </span>
+                            {% else %}
+                            <span class="inline-flex items-center space-x-1 px-2 py-0.5 rounded-full bg-rose-50 text-rose-700 border border-rose-200 font-bold text-[10px]">
+                                <span>No-Show</span>
+                            </span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4 font-mono text-slate-600 text-[11px]">
+                            {{ a.checkin_at or '-' }}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if a.status != 'Attended' and fup %}
+                            <span class="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+                                {{ fup.status }}
+                            </span>
+                            {% else %}
+                            <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+                        <td class="py-3 px-4">
+                            {% if a.status != 'Attended' and fup %}
+                            <span class="text-slate-700 font-medium">{{ fup.reason_category }}</span>
+                            {% if fup.notes %}
+                            <div class="text-[10px] text-slate-400 italic">{{ fup.notes }}</div>
+                            {% endif %}
+                            {% else %}
+                            <span class="text-slate-400">-</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<script>
+    // Initialize Donut Chart
+    const ctxTurnout = document.getElementById('turnoutChart').getContext('2d');
+    new Chart(ctxTurnout, {
+        type: 'doughnut',
+        data: {
+            labels: ['Attended', 'Absent'],
+            datasets: [{
+                data: [{{ attended_count }}, {{ absent_count }}],
+                backgroundColor: ['#10b981', '#f59e0b'],
+                borderWidth: 0,
+                hoverOffset: 4
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            cutout: '72%'
+        }
+    });
+
+    // Initialize Arrival Timeline Chart
+    const arrivalLabels = {{ arrival_labels | tojson }};
+    const arrivalData = {{ arrival_counts | tojson }};
+
+    const ctxArrival = document.getElementById('arrivalChart').getContext('2d');
+    new Chart(ctxArrival, {
+        type: 'bar',
+        data: {
+            labels: arrivalLabels.length > 0 ? arrivalLabels : ['09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00'],
+            datasets: [{
+                label: 'Check-in Count',
+                data: arrivalData.length > 0 ? arrivalData : [0, 0, 0, 0, 0, 0, 0],
+                backgroundColor: '#4f46e5',
+                borderRadius: 8,
+                barThickness: 24,
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: { display: false }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { precision: 0 }
+                },
+                x: {
+                    grid: { display: false }
+                }
+            }
+        }
+    });
+
+    function filterReportTable() {
+        const q = document.getElementById('report-search').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('.report-row');
+        rows.forEach(r => {
+            const data = r.getAttribute('data-search') || '';
+            r.style.display = data.includes(q) ? '' : 'none';
+        });
+    }
+</script>
+{% endblock %}

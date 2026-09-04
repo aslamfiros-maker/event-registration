@@ -1,0 +1,304 @@
+{% extends "base.html" %}
+
+{% block title %}Absentee Follow-Up - {{ event.title }} - EventPulse{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Header Card -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 mb-1">
+                <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+                <span class="text-xs font-bold uppercase tracking-wider text-amber-700">Not Attending Outreach Hub</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900">{{ event.title }} - Absentee Follow-Up</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Reach out to no-shows via WhatsApp and Email, record reasons for absence, and share post-event materials</p>
+        </div>
+
+        <div class="flex items-center space-x-3">
+            <button onclick="openTemplateSelector()" class="px-4 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs sm:text-sm font-bold shadow-sm transition flex items-center space-x-2">
+                <i data-lucide="message-square-plus" class="w-4 h-4 text-amber-400"></i>
+                <span>Message Templates</span>
+            </button>
+            <a href="/events/{{ event.id }}" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition flex items-center space-x-1.5">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Back</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Follow-up Progress KPIs -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
+            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Absent (No-Shows)</span>
+            <p class="text-2xl font-black text-rose-600 mt-1">{{ absentees|length }}</p>
+        </div>
+        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 shadow-sm">
+            <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider">Pending Outreach</span>
+            <p class="text-2xl font-black text-slate-700 mt-1" id="kpi-pending-outreach">{{ pending_outreach_count }}</p>
+        </div>
+        <div class="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border border-amber-200 shadow-sm">
+            <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider">Follow-Up Sent</span>
+            <p class="text-2xl font-black text-amber-700 mt-1" id="kpi-contacted">{{ contacted_count }}</p>
+        </div>
+        <div class="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200 shadow-sm">
+            <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Reasons Logged</span>
+            <p class="text-2xl font-black text-emerald-700 mt-1" id="kpi-responded">{{ responded_count }}</p>
+        </div>
+    </div>
+
+    <!-- Absentee Follow-Up Table Container -->
+    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
+        <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div>
+                <h2 class="text-lg font-bold text-slate-900">Absent Attendees List</h2>
+                <p class="text-xs text-slate-500">Track outreach status and categorize absence reasons</p>
+            </div>
+            <div class="flex items-center space-x-2">
+                <input type="text" id="absentee-search" oninput="filterAbsentees()" placeholder="Search name, phone, or org..." class="px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+            </div>
+        </div>
+
+        {% if absentees %}
+        <div class="overflow-x-auto">
+            <table class="w-full text-left text-xs sm:text-sm text-slate-600" id="absentee-table">
+                <thead class="bg-slate-50 border-b border-slate-200/80 text-[11px] uppercase tracking-wider text-slate-500 font-bold">
+                    <tr>
+                        <th class="py-3.5 px-4">Attendee</th>
+                        <th class="py-3.5 px-4">Contact Info</th>
+                        <th class="py-3.5 px-4">Quick Outreach</th>
+                        <th class="py-3.5 px-4">Outreach Status</th>
+                        <th class="py-3.5 px-4">Reason Category</th>
+                        <th class="py-3.5 px-4">Notes & Remarks</th>
+                        <th class="py-3.5 px-4 text-right">Save</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-slate-100">
+                    {% for a in absentees %}
+                    {% set fup = a.followup %}
+                    <tr class="hover:bg-slate-50/80 transition absentee-row" id="fup-row-{{ a.id }}" data-search="{{ a.full_name|lower }} {{ a.phone or '' }} {{ a.organization|lower or '' }}">
+                        <!-- Attendee Info -->
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-slate-900">{{ a.full_name }}</div>
+                            <div class="text-[11px] text-slate-400 font-mono">{{ a.ticket_code }}</div>
+                            {% if a.organization %}
+                            <div class="text-[11px] text-slate-500">{{ a.organization }}</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- Contact Info -->
+                        <td class="py-3.5 px-4">
+                            <div>{{ a.email }}</div>
+                            {% if a.phone %}
+                            <div class="font-mono text-slate-700 font-semibold mt-0.5">{{ a.phone }}</div>
+                            {% else %}
+                            <div class="text-rose-400 text-[11px]">No phone number</div>
+                            {% endif %}
+                        </td>
+
+                        <!-- 1-Click Outreach Buttons -->
+                        <td class="py-3.5 px-4">
+                            <div class="flex items-center space-x-2">
+                                {% if a.whatsapp_link %}
+                                <a href="{{ a.whatsapp_link }}" target="_blank" onclick="markContacted('{{ a.id }}', 'WhatsApp')" title="Open 1-Click WhatsApp Chat with Pre-filled Message" class="px-2.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center space-x-1 transition">
+                                    <i data-lucide="message-circle" class="w-3.5 h-3.5"></i>
+                                    <span>WhatsApp</span>
+                                </a>
+                                {% else %}
+                                <button disabled class="px-2.5 py-1.5 rounded-lg bg-slate-100 text-slate-400 text-xs font-medium cursor-not-allowed">
+                                    No WhatsApp
+                                </button>
+                                {% endif %}
+
+                                <a href="mailto:{{ a.email }}?subject={{ mail_subject | urlencode }}&body={{ mail_body | urlencode }}" onclick="markContacted('{{ a.id }}', 'Email')" title="Send Follow-up Email" class="px-2.5 py-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs flex items-center space-x-1 transition">
+                                    <i data-lucide="mail" class="w-3.5 h-3.5"></i>
+                                    <span>Email</span>
+                                </a>
+                            </div>
+                        </td>
+
+                        <!-- Follow-up Status Dropdown -->
+                        <td class="py-3.5 px-4">
+                            <select id="status-{{ a.id }}" class="px-2.5 py-1.5 text-xs font-semibold rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <option value="Not Contacted" {% if fup.status == 'Not Contacted' %}selected{% endif %}>Not Contacted</option>
+                                <option value="Follow-up Sent" {% if fup.status == 'Follow-up Sent' %}selected{% endif %}>Follow-up Sent</option>
+                                <option value="Responded" {% if fup.status == 'Responded' %}selected{% endif %}>Responded: Reason Noted</option>
+                                <option value="Excused" {% if fup.status == 'Excused' %}selected{% endif %}>Excused (Prior Notice)</option>
+                            </select>
+                        </td>
+
+                        <!-- Reason Category Dropdown -->
+                        <td class="py-3.5 px-4">
+                            <select id="reason-{{ a.id }}" class="px-2.5 py-1.5 text-xs rounded-xl bg-slate-50 border border-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500">
+                                <option value="Not Specified" {% if fup.reason_category == 'Not Specified' %}selected{% endif %}>Not Specified</option>
+                                <option value="Work Conflict" {% if fup.reason_category == 'Work Conflict' %}selected{% endif %}>Work Conflict / Office Emergency</option>
+                                <option value="Health/Medical" {% if fup.reason_category == 'Health/Medical' %}selected{% endif %}>Health / Medical Issue</option>
+                                <option value="Travel Issue" {% if fup.reason_category == 'Travel Issue' %}selected{% endif %}>Travel / Traffic Delay</option>
+                                <option value="Forgot Schedule" {% if fup.reason_category == 'Forgot Schedule' %}selected{% endif %}>Forgot / Calendar Clash</option>
+                                <option value="Personal Emergency" {% if fup.reason_category == 'Personal Emergency' %}selected{% endif %}>Personal Emergency</option>
+                                <option value="Other" {% if fup.reason_category == 'Other' %}selected{% endif %}>Other Reason</option>
+                            </select>
+                        </td>
+
+                        <!-- Notes Text Input -->
+                        <td class="py-3.5 px-4">
+                            <input type="text" id="notes-{{ a.id }}" value="{{ fup.notes or '' }}" placeholder="e.g. Sent materials; will join next time" class="w-full px-2.5 py-1.5 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-amber-500">
+                        </td>
+
+                        <!-- Save Button -->
+                        <td class="py-3.5 px-4 text-right">
+                            <button onclick="saveFollowup('{{ a.id }}')" id="save-btn-{{ a.id }}" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-xs transition flex items-center space-x-1 ml-auto">
+                                <i data-lucide="save" class="w-3.5 h-3.5"></i>
+                                <span>Save</span>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+        {% else %}
+        <div class="p-12 text-center text-slate-500">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                <i data-lucide="party-popper" class="w-6 h-6"></i>
+            </div>
+            <h3 class="font-bold text-slate-800">100% Attendance or No Registrations Yet!</h3>
+            <p class="text-xs text-slate-400 mt-1">There are no absent attendees to follow up with at this time.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Template Selector Modal -->
+<div id="template-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-100">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-amber-50 text-amber-600 flex items-center justify-center">
+                    <i data-lucide="message-square" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">Absentee Message Templates</h3>
+            </div>
+            <button onclick="closeTemplateSelector()" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <div class="mt-4 space-y-4 text-xs">
+            <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-800">Template 1: "Sorry We Missed You" (Standard)</span>
+                    <button onclick="copyTemplateText('t1')" class="text-brand-600 hover:underline font-semibold">Copy Text</button>
+                </div>
+                <p class="text-slate-600 leading-relaxed" id="t1-text">
+                    Hello [Name], we noticed you were unable to attend '{{ event.title }}' today. We truly missed having you with us! Could you please let us know if everything is alright or if you faced any issues joining?
+                </p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-800">Template 2: "Event Materials & Presentation Sharing"</span>
+                    <button onclick="copyTemplateText('t2')" class="text-brand-600 hover:underline font-semibold">Copy Text</button>
+                </div>
+                <p class="text-slate-600 leading-relaxed" id="t2-text">
+                    Hello [Name], thank you for registering for '{{ event.title }}'. Although you couldn't make it in person today, we're pleased to share the key slides and recording notes so you don't miss out! Feel free to reply with any questions.
+                </p>
+            </div>
+
+            <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 space-y-2">
+                <div class="flex items-center justify-between">
+                    <span class="font-bold text-slate-800">Template 3: "Reason Survey & Future Event Check"</span>
+                    <button onclick="copyTemplateText('t3')" class="text-brand-600 hover:underline font-semibold">Copy Text</button>
+                </div>
+                <p class="text-slate-600 leading-relaxed" id="t3-text">
+                    Hello [Name], we're wrapping up '{{ event.title }}' and doing our post-event review. We'd love to know if a schedule conflict or other obligation kept you from joining so we can better plan future event timings. Thank you!
+                </p>
+            </div>
+        </div>
+
+        <div class="mt-5 flex justify-end">
+            <button onclick="closeTemplateSelector()" class="px-4 py-2 text-xs font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+    const eventId = {{ event.id }};
+
+    function openTemplateSelector() {
+        document.getElementById('template-modal').classList.remove('hidden');
+    }
+    function closeTemplateSelector() {
+        document.getElementById('template-modal').classList.add('hidden');
+    }
+    function copyTemplateText(id) {
+        const text = document.getElementById(`${id}-text`).innerText.trim();
+        navigator.clipboard.writeText(text).then(() => {
+            showToast('Template copied to clipboard!', 'success');
+        });
+    }
+
+    function filterAbsentees() {
+        const q = document.getElementById('absentee-search').value.toLowerCase().trim();
+        const rows = document.querySelectorAll('.absentee-row');
+        rows.forEach(r => {
+            const data = r.getAttribute('data-search') || '';
+            r.style.display = data.includes(q) ? '' : 'none';
+        });
+    }
+
+    async function markContacted(attendeeId, channel) {
+        const statusSelect = document.getElementById(`status-${attendeeId}`);
+        if (statusSelect.value === 'Not Contacted') {
+            statusSelect.value = 'Follow-up Sent';
+            saveFollowup(attendeeId, channel);
+        }
+    }
+
+    async function saveFollowup(attendeeId, channelOverride = null) {
+        const status = document.getElementById(`status-${attendeeId}`).value;
+        const reason = document.getElementById(`reason-${attendeeId}`).value;
+        const notes = document.getElementById(`notes-${attendeeId}`).value;
+        const saveBtn = document.getElementById(`save-btn-${attendeeId}`);
+
+        saveBtn.disabled = true;
+        saveBtn.innerHTML = `<span>Saving...</span>`;
+
+        try {
+            const res = await fetch('/api/followup', {
+                method: 'POST',
+                headers: {'Content-Type': 'application/json'},
+                body: JSON.stringify({
+                    attendee_id: parseInt(attendeeId),
+                    event_id: eventId,
+                    status: status,
+                    channel: channelOverride || 'WhatsApp',
+                    reason_category: reason,
+                    notes: notes
+                })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast('Follow-up record saved!', 'success');
+                saveBtn.innerHTML = `<i data-lucide="check" class="w-3.5 h-3.5"></i><span>Saved</span>`;
+                saveBtn.className = 'px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 text-white shadow-xs transition flex items-center space-x-1 ml-auto';
+                setTimeout(() => {
+                    saveBtn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Save</span>`;
+                    saveBtn.className = 'px-3 py-1.5 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white shadow-xs transition flex items-center space-x-1 ml-auto';
+                    saveBtn.disabled = false;
+                    lucide.createIcons();
+                }, 1500);
+            } else {
+                showToast(data.detail || 'Save failed', 'error');
+                saveBtn.disabled = false;
+                saveBtn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Save</span>`;
+            }
+        } catch(e) {
+            showToast('Error saving record', 'error');
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = `<i data-lucide="save" class="w-3.5 h-3.5"></i><span>Save</span>`;
+        }
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

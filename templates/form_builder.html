@@ -1,0 +1,490 @@
+{% extends "base.html" %}
+
+{% block title %}Form Builder - {{ event.title }} - EventPulse{% endblock %}
+
+{% block content %}
+<div class="space-y-6">
+    <!-- Top Action Bar -->
+    <div
+        class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <div class="flex items-center space-x-2 mb-1">
+                <span
+                    class="px-2.5 py-0.5 text-xs font-bold rounded-full bg-indigo-50 text-brand-700 border border-indigo-200">
+                    Registration Form Customizer
+                </span>
+                <span class="text-xs text-slate-400">&bull; Per-Event Configuration</span>
+            </div>
+            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900">{{ event.title }} - Custom Form Builder</h1>
+            <p class="text-xs text-slate-500 mt-0.5">Customize questions, enable/disable fields, and add custom
+                dropdowns or inputs for your attendees</p>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2.5">
+            <a href="/events/{{ event.id }}/register" target="_blank"
+                class="px-4 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center space-x-1.5">
+                <i data-lucide="external-link" class="w-4 h-4"></i>
+                <span>Preview Public Page</span>
+            </a>
+            <button onclick="saveFormConfig()" id="save-form-btn"
+                class="px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-600/20 transition flex items-center space-x-1.5">
+                <i data-lucide="save" class="w-4 h-4"></i>
+                <span>Save Form Configuration</span>
+            </button>
+            <a href="/events/{{ event.id }}"
+                class="px-3.5 py-2.5 text-xs sm:text-sm font-semibold rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition flex items-center space-x-1">
+                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+                <span>Back</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- 2 Column Layout: Left (Editor), Right (Live Preview) -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+
+        <!-- Left: Field Configuration Panel (7 Cols) -->
+        <div class="lg:col-span-7 space-y-6">
+
+            <!-- Quick Preset Templates -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 space-y-3">
+                <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Quick Template
+                        Presets</span>
+                    <span class="text-[11px] text-slate-400">Click to load common field bundles</span>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                    <button onclick="applyPreset('tech')"
+                        class="p-3 text-left rounded-2xl bg-slate-50 hover:bg-indigo-50/50 border border-slate-200 hover:border-brand-300 transition">
+                        <div class="font-bold text-slate-800">💻 Tech / Hackathon</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">T-Shirt, GitHub, Dietary</div>
+                    </button>
+                    <button onclick="applyPreset('academic')"
+                        class="p-3 text-left rounded-2xl bg-slate-50 hover:bg-emerald-50/50 border border-slate-200 hover:border-emerald-300 transition">
+                        <div class="font-bold text-slate-800">🎓 Academic / College</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Roll No, Department, Year</div>
+                    </button>
+                    <button onclick="applyPreset('corporate')"
+                        class="p-3 text-left rounded-2xl bg-slate-50 hover:bg-purple-50/50 border border-slate-200 hover:border-purple-300 transition">
+                        <div class="font-bold text-slate-800">🏢 Corporate Meet</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Company Size, LinkedIn</div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Standard Core Fields -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Standard Attendee Fields</h3>
+                        <p class="text-xs text-slate-500">Configure core contact and organization fields</p>
+                    </div>
+                </div>
+
+                <div class="space-y-3" id="standard-fields-container">
+                    <!-- Standard fields rendered via JS -->
+                </div>
+            </div>
+
+            <!-- Custom Questions / Fields Section -->
+            <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+                <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <div>
+                        <h3 class="text-sm font-bold text-slate-900">Custom Questions & Fields</h3>
+                        <p class="text-xs text-slate-500">Add custom dropdowns, textboxes, or checkboxes</p>
+                    </div>
+                    <button onclick="openAddFieldModal()"
+                        class="px-3.5 py-2 text-xs font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-xs transition flex items-center space-x-1.5">
+                        <i data-lucide="plus-circle" class="w-4 h-4"></i>
+                        <span>+ Add Field</span>
+                    </button>
+                </div>
+
+                <div id="custom-fields-container" class="space-y-3">
+                    <!-- Custom fields will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right: Interactive Live Preview (5 Cols) -->
+        <div
+            class="lg:col-span-5 sticky top-20 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                <div class="flex items-center space-x-2">
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                    <h3 class="text-sm font-bold text-slate-900">Live Attendee Form Preview</h3>
+                </div>
+                <span class="text-[10px] uppercase font-bold text-slate-400">Updates Instantly</span>
+            </div>
+
+            <div class="p-4 rounded-2xl bg-slate-50/70 border border-slate-200/70 space-y-4">
+                <!-- Event Mini Header -->
+                <div class="bg-gradient-to-r from-brand-900 to-indigo-900 p-4 rounded-xl text-white text-xs">
+                    <span class="text-[10px] font-bold text-indigo-300 uppercase">{{ event.category }}</span>
+                    <h4 class="font-extrabold text-sm text-white mt-0.5">{{ event.title }}</h4>
+                    <p class="text-[11px] text-slate-300 mt-1">{{ event.event_date }} &bull; {{ event.venue }}</p>
+                </div>
+
+                <!-- Live Dynamic Inputs Preview -->
+                <div id="live-preview-fields" class="space-y-3 text-xs">
+                    <!-- Dynamically populated by JS -->
+                </div>
+
+                <div class="pt-2">
+                    <button disabled
+                        class="w-full py-2.5 rounded-xl bg-brand-600/80 text-white font-bold text-xs cursor-not-allowed">
+                        Register & Get QR Ticket (Preview)
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Custom Field Modal -->
+<div id="add-field-modal"
+    class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
+        <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-base font-bold text-slate-900">Add Custom Question</h3>
+            </div>
+            <button onclick="closeAddFieldModal()" class="text-slate-400 hover:text-slate-600">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+
+        <form onsubmit="handleCustomFieldSubmit(event)" class="mt-4 space-y-3 text-xs">
+            <div>
+                <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1">Field Label /
+                    Question *</label>
+                <input type="text" id="new-field-label" required placeholder="e.g. T-Shirt Size or Dietary Preference"
+                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1">Field Type
+                    *</label>
+                <select id="new-field-type" onchange="toggleOptionsInput()"
+                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                    <option value="text">Single Line Text</option>
+                    <option value="select">Dropdown Menu (Select One)</option>
+                    <option value="number">Number</option>
+                    <option value="tel">Phone / Contact</option>
+                    <option value="textarea">Paragraph / Multi-line Text</option>
+                    <option value="checkbox">Checkbox (Consent / Yes-No)</option>
+                </select>
+            </div>
+
+            <div id="options-container" class="hidden">
+                <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1">Dropdown Options
+                    (Comma separated) *</label>
+                <input type="text" id="new-field-options" placeholder="Small, Medium, Large, XL, XXL"
+                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+                <span class="text-[10px] text-slate-400">Separate each selectable choice with a comma.</span>
+            </div>
+
+            <div>
+                <label class="block font-bold text-slate-700 uppercase tracking-wider text-[11px] mb-1">Placeholder /
+                    Hint (Optional)</label>
+                <input type="text" id="new-field-placeholder" placeholder="e.g. Choose your size..."
+                    class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-brand-500">
+            </div>
+
+            <div class="flex items-center space-x-2 pt-1">
+                <input type="checkbox" id="new-field-required" class="w-4 h-4 text-brand-600 rounded">
+                <label for="new-field-required" class="font-semibold text-slate-700">Make this field mandatory
+                    (Required)</label>
+            </div>
+
+            <div class="flex justify-end space-x-2 pt-4 border-t border-slate-100">
+                <button type="button" onclick="closeAddFieldModal()"
+                    class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100">Cancel</button>
+                <button type="submit"
+                    class="px-4 py-2 text-xs font-bold rounded-xl bg-brand-600 text-white hover:bg-brand-700 shadow-md">Add
+                    to Form</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    const eventId = {{ event.id }};
+    let formFields = {{ current_fields | tojson }};
+
+    document.addEventListener('DOMContentLoaded', () => {
+        renderFieldsEditor();
+        renderLivePreview();
+        lucide.createIcons();
+    });
+
+    function toggleOptionsInput() {
+        const type = document.getElementById('new-field-type').value;
+        const optsContainer = document.getElementById('options-container');
+        if (type === 'select') {
+            optsContainer.classList.remove('hidden');
+        } else {
+            optsContainer.classList.add('hidden');
+        }
+    }
+
+    function openAddFieldModal() {
+        document.getElementById('new-field-label').value = '';
+        document.getElementById('new-field-type').value = 'text';
+        document.getElementById('new-field-options').value = '';
+        document.getElementById('new-field-placeholder').value = '';
+        document.getElementById('new-field-required').checked = false;
+        toggleOptionsInput();
+        document.getElementById('add-field-modal').classList.remove('hidden');
+    }
+
+    function closeAddFieldModal() {
+        document.getElementById('add-field-modal').classList.add('hidden');
+    }
+
+    function handleCustomFieldSubmit(e) {
+        e.preventDefault();
+        const label = document.getElementById('new-field-label').value.trim();
+        const type = document.getElementById('new-field-type').value;
+        const optionsRaw = document.getElementById('new-field-options').value.trim();
+        const placeholder = document.getElementById('new-field-placeholder').value.trim();
+        const required = document.getElementById('new-field-required').checked;
+
+        if (!label) return;
+
+        let options = [];
+        if (type === 'select') {
+            options = optionsRaw.split(',').map(s => s.trim()).filter(Boolean);
+            if (options.length === 0) {
+                alert('Please enter at least one dropdown option (separated by commas).');
+                return;
+            }
+        }
+
+        const id = 'custom_' + label.toLowerCase().replace(/[^a-z0-9]/g, '_') + '_' + Math.random().toString(36).substring(2, 5);
+
+        formFields.push({
+            id: id,
+            label: label,
+            type: type,
+            required: required,
+            enabled: true,
+            options: options,
+            placeholder: placeholder,
+            is_standard: false
+        });
+
+        closeAddFieldModal();
+        renderFieldsEditor();
+        renderLivePreview();
+        showToast('Custom field added to preview!', 'info');
+    }
+
+    function removeCustomField(fieldId) {
+        formFields = formFields.filter(f => f.id !== fieldId);
+        renderFieldsEditor();
+        renderLivePreview();
+    }
+
+    function toggleStandardField(fieldId, prop) {
+        const field = formFields.find(f => f.id === fieldId);
+        if (field) {
+            field[prop] = !field[prop];
+            renderFieldsEditor();
+            renderLivePreview();
+        }
+    }
+
+    function renderFieldsEditor() {
+        const stdContainer = document.getElementById('standard-fields-container');
+        const customContainer = document.getElementById('custom-fields-container');
+
+        const stdFields = formFields.filter(f => f.is_standard);
+        const customFields = formFields.filter(f => !f.is_standard);
+
+        // Standard fields HTML
+        stdContainer.innerHTML = stdFields.map(f => {
+            const isMandatory = (f.id === 'full_name' || f.id === 'email');
+            return `
+                <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs">
+                    <div class="flex items-center space-x-2 min-w-0">
+                        <i data-lucide="${f.id === 'full_name' ? 'user' : f.id === 'email' ? 'mail' : f.id === 'phone' ? 'phone' : 'file-text'}" class="w-4 h-4 text-slate-400 shrink-0"></i>
+                        <div>
+                            <span class="font-bold text-slate-900">${f.label}</span>
+                            <span class="text-[10px] text-slate-400 ml-1">(${f.type})</span>
+                        </div>
+                    </div>
+
+                    <div class="flex items-center space-x-2 shrink-0">
+                        ${isMandatory ? `
+                            <span class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-200 text-slate-600">Core Required</span>
+                        ` : `
+                            <button onclick="toggleStandardField('${f.id}', 'required')" class="px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${f.required ? 'bg-amber-100 text-amber-800 border border-amber-300' : 'bg-slate-200 text-slate-600'}">
+                                ${f.required ? 'Required' : 'Optional'}
+                            </button>
+                            <button onclick="toggleStandardField('${f.id}', 'enabled')" class="px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${f.enabled ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-rose-100 text-rose-800'}">
+                                ${f.enabled ? 'Enabled' : 'Hidden'}
+                            </button>
+                        `}
+                    </div>
+                </div>
+            `;
+        }).join('');
+
+        // Custom fields HTML
+        if (customFields.length === 0) {
+            customContainer.innerHTML = `
+                <div class="p-6 text-center border-2 border-dashed border-slate-200 rounded-2xl text-slate-400 text-xs">
+                    No custom questions yet. Click <strong>'+ Add Field'</strong> to create custom dropdowns, textboxes, or checkboxes!
+                </div>
+            `;
+        } else {
+            customContainer.innerHTML = customFields.map(f => {
+                return `
+                    <div class="p-3.5 rounded-2xl border border-indigo-100 bg-indigo-50/40 flex items-center justify-between gap-3 text-xs">
+                        <div class="flex items-center space-x-2 min-w-0">
+                            <span class="px-1.5 py-0.5 rounded bg-brand-100 text-brand-700 font-mono text-[10px] uppercase font-bold">${f.type}</span>
+                            <span class="font-bold text-slate-900 truncate">${f.label}</span>
+                            ${f.required ? '<span class="text-rose-500 font-bold">*</span>' : ''}
+                        </div>
+
+                        <div class="flex items-center space-x-2 shrink-0">
+                            <button onclick="toggleStandardField('${f.id}', 'required')" class="px-2 py-1 rounded-lg text-[10px] font-semibold transition ${f.required ? 'bg-amber-100 text-amber-800' : 'bg-slate-200 text-slate-600'}">
+                                ${f.required ? 'Required' : 'Optional'}
+                            </button>
+                            <button onclick="removeCustomField('${f.id}')" title="Delete Field" class="p-1.5 rounded-lg text-slate-400 hover:text-rose-600 hover:bg-rose-50 transition">
+                                <i data-lucide="trash-2" class="w-4 h-4"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        lucide.createIcons();
+    }
+
+    function renderLivePreview() {
+        const previewContainer = document.getElementById('live-preview-fields');
+        const activeFields = formFields.filter(f => f.enabled);
+
+        previewContainer.innerHTML = activeFields.map(f => {
+            const reqStar = f.required ? '<span class="text-rose-500">*</span>' : '';
+
+            if (f.type === 'select') {
+                const optionsHtml = (f.options || []).map(opt => `<option value="${opt}">${opt}</option>`).join('');
+                return `
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">${f.label} ${reqStar}</label>
+                        <select class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs">
+                            <option value="">${f.placeholder || 'Select an option...'}</option>
+                            ${optionsHtml}
+                        </select>
+                    </div>
+                `;
+            } else if (f.type === 'textarea') {
+                return `
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">${f.label} ${reqStar}</label>
+                        <textarea rows="2" placeholder="${f.placeholder || ''}" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs"></textarea>
+                    </div>
+                `;
+            } else if (f.type === 'checkbox') {
+                return `
+                    <div class="flex items-center space-x-2 pt-1">
+                        <input type="checkbox" class="w-4 h-4 text-brand-600 rounded">
+                        <label class="font-semibold text-slate-700 text-xs">${f.label} ${reqStar}</label>
+                    </div>
+                `;
+            } else {
+                return `
+                    <div>
+                        <label class="block font-bold text-slate-700 uppercase tracking-wider text-[10px] mb-1">${f.label} ${reqStar}</label>
+                        <input type="${f.type || 'text'}" placeholder="${f.placeholder || ''}" class="w-full px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs">
+                    </div>
+                `;
+            }
+        }).join('');
+    }
+
+    function applyPreset(type) {
+        // Keep core Name, Email, Phone
+        const base = [
+            { id: "full_name", label: "Full Name", type: "text", required: true, enabled: true, is_standard: true, placeholder: "e.g. Jane Doe" },
+            { id: "email", label: "Email Address", type: "email", required: true, enabled: true, is_standard: true, placeholder: "name@example.com" },
+            { id: "phone", label: "Phone Number (WhatsApp)", type: "tel", required: true, enabled: true, is_standard: true, placeholder: "+1 555-0199 or 9876543210" },
+        ];
+
+        if (type === 'tech') {
+            formFields = [
+                ...base,
+                { id: "School", label: "School Name", type: "text", required: false, enabled: true, is_standard: true, placeholder: "e.g. Acme Corp" },
+                { id: "role", label: "Role / Track", type: "text", required: false, enabled: true, is_standard: true, placeholder: "Developer / Designer" },
+                { id: "tshirt_size", label: "T-Shirt Size", type: "select", options: ["S", "M", "L", "XL", "XXL"], required: true, enabled: true, is_standard: false },
+                { id: "github_url", label: "GitHub / Portfolio URL", type: "text", required: false, enabled: true, is_standard: false, placeholder: "https://github.com/..." },
+                { id: "dietary", label: "Dietary Preference", type: "select", options: ["Standard", "Vegetarian", "Vegan", "Jain"], required: false, enabled: true, is_standard: false },
+                { id: "notes", label: "Special Requirements", type: "textarea", required: false, enabled: true, is_standard: true, placeholder: "Any questions or requirements..." }
+            ];
+        } else if (type === 'academic') {
+            formFields = [
+                ...base,
+                { id: "School", label: "School Name", type: "text", required: true, enabled: true, is_standard: true, placeholder: "e.g. Stanford University" },
+                { id: "student_id", label: "Student Roll / ID Number", type: "text", required: true, enabled: true, is_standard: false, placeholder: "e.g. CS2026-042" },
+                { id: "department", label: "Department / Branch", type: "select", options: ["Computer Science", "Information Technology", "Electrical", "Mechanical", "Business / Management", "Other"], required: true, enabled: true, is_standard: false },
+                { id: "academic_year", label: "Year of Study", type: "select", options: ["1st Year", "2nd Year", "3rd Year", "4th Year / Final", "Post-Graduate / Alumni"], required: true, enabled: true, is_standard: false },
+                { id: "notes", label: "Academic Inquiries", type: "textarea", required: false, enabled: false, is_standard: true }
+            ];
+        } else if (type === 'corporate') {
+            formFields = [
+                ...base,
+                { id: "School", label: "School Name", type: "text", required: true, enabled: true, is_standard: true, placeholder: "e.g. Acme Corporation" },
+                { id: "role", label: "Official Job Title", type: "text", required: true, enabled: true, is_standard: true, placeholder: "e.g. Director of Engineering" },
+                { id: "company_size", label: "Company Size", type: "select", options: ["1-50 employees", "51-200 employees", "201-1000 employees", "1000+ Enterprise"], required: false, enabled: true, is_standard: false },
+                { id: "linkedin_url", label: "LinkedIn Profile", type: "text", required: false, enabled: true, is_standard: false, placeholder: "https://linkedin.com/in/..." },
+                { id: "notes", label: "Networking Interests", type: "textarea", required: false, enabled: true, is_standard: true, placeholder: "Topics you look forward to discussing..." }
+            ];
+        }
+
+        renderFieldsEditor();
+        renderLivePreview();
+        showToast(`Applied ${type.toUpperCase()} template! Don't forget to click Save.`, 'info');
+    }
+
+    async function saveFormConfig() {
+        const btn = document.getElementById('save-form-btn');
+        btn.disabled = true;
+        btn.innerHTML = `<span>Saving Configuration...</span>`;
+
+        try {
+            const res = await fetch(`/api/events/${eventId}/form-config`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ fields: formFields })
+            });
+            const data = await res.json();
+            if (res.ok) {
+                showToast('Registration form configuration saved successfully!', 'success');
+                btn.innerHTML = `<i data-lucide="check" class="w-4 h-4"></i><span>Saved!</span>`;
+                btn.className = 'px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-emerald-600 text-white shadow-md transition flex items-center space-x-1.5';
+                setTimeout(() => {
+                    btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Save Form Configuration</span>`;
+                    btn.className = 'px-5 py-2.5 text-xs sm:text-sm font-bold rounded-xl bg-brand-600 hover:bg-brand-700 text-white shadow-md shadow-brand-600/20 transition flex items-center space-x-1.5';
+                    btn.disabled = false;
+                    lucide.createIcons();
+                }, 1500);
+            } else {
+                showToast(data.detail || 'Failed to save form config', 'error');
+                btn.disabled = false;
+                btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Save Form Configuration</span>`;
+            }
+        } catch (e) {
+            showToast('Error connecting to server', 'error');
+            btn.disabled = false;
+            btn.innerHTML = `<i data-lucide="save" class="w-4 h-4"></i><span>Save Form Configuration</span>`;
+        }
+        lucide.createIcons();
+    }
+</script>
+{% endblock %}

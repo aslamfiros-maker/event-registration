@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="en" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}EventPulse - Modern Event Management & Attendance System{% endblock %}</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            50: '#eef2ff',
+                            100: '#e0e7ff',
+                            500: '#6366f1',
+                            600: '#4f46e5',
+                            700: '#4338ca',
+                            800: '#3730a3',
+                            900: '#312e81',
+                        }
+                    }
+                }
+            }
+        }
+    </script>
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Google Fonts Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .print-only {
+                display: block !important;
+            }
+            body {
+                background-color: white !important;
+            }
+        }
+    </style>
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="h-full flex flex-col text-slate-800 antialiased">
+    <!-- Navigation Bar -->
+    <header class="no-print sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-slate-200">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <!-- Logo -->
+                <div class="flex items-center space-x-3">
+                    <a href="/" class="flex items-center space-x-2.5 group">
+                        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 to-indigo-500 flex items-center justify-center text-white shadow-md shadow-brand-500/20 group-hover:scale-105 transition">
+                            <i data-lucide="calendar-check" class="w-5 h-5"></i>
+                        </div>
+                        <div>
+                            <span class="text-xl font-extrabold tracking-tight text-slate-900">Event<span class="text-brand-600">Pulse</span></span>
+                            <span class="hidden sm:inline-block ml-2 px-2 py-0.5 text-xs font-semibold bg-brand-50 text-brand-700 rounded-full border border-brand-200">Pro</span>
+                        </div>
+                    </a>
+                </div>
+
+                <!-- Center Nav Links -->
+                <nav class="hidden md:flex space-x-1">
+                    <a href="/" class="px-3.5 py-2 text-sm font-medium rounded-lg text-slate-700 hover:text-brand-600 hover:bg-slate-100 transition flex items-center space-x-1.5">
+                        <i data-lucide="layout-grid" class="w-4 h-4"></i>
+                        <span>All Events</span>
+                    </a>
+                    {% if event %}
+                    <div class="flex items-center space-x-1 border-l border-slate-200 pl-3 ml-2">
+                        <a href="/events/{{ event.id }}" class="px-3 py-1.5 text-xs font-semibold rounded-lg {% if active_tab == 'overview' %}bg-brand-50 text-brand-700 border border-brand-200{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center space-x-1">
+                            <i data-lucide="info" class="w-3.5 h-3.5"></i>
+                            <span>Overview</span>
+                        </a>
+                        <a href="/events/{{ event.id }}/form-builder" class="px-3 py-1.5 text-xs font-semibold rounded-lg {% if active_tab == 'form-builder' %}bg-indigo-50 text-brand-700 border border-brand-200{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center space-x-1">
+                            <i data-lucide="sliders" class="w-3.5 h-3.5"></i>
+                            <span>Form Builder</span>
+                        </a>
+                        <a href="/events/{{ event.id }}/register" target="_blank" class="px-3 py-1.5 text-xs font-semibold rounded-lg text-slate-600 hover:bg-slate-100 flex items-center space-x-1">
+                            <i data-lucide="external-link" class="w-3.5 h-3.5"></i>
+                            <span>Pre-Registration</span>
+                        </a>
+                        <a href="/events/{{ event.id }}/checkin" class="px-3 py-1.5 text-xs font-semibold rounded-lg {% if active_tab == 'checkin' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center space-x-1">
+                            <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+                            <span>Attendance Kiosk</span>
+                        </a>
+                        <a href="/events/{{ event.id }}/followup" class="px-3 py-1.5 text-xs font-semibold rounded-lg {% if active_tab == 'followup' %}bg-amber-50 text-amber-700 border border-amber-200{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center space-x-1">
+                            <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
+                            <span>Not Attending</span>
+                        </a>
+                        <a href="/events/{{ event.id }}/report" class="px-3 py-1.5 text-xs font-semibold rounded-lg {% if active_tab == 'report' %}bg-purple-50 text-purple-700 border border-purple-200{% else %}text-slate-600 hover:bg-slate-100{% endif %} flex items-center space-x-1">
+                            <i data-lucide="file-text" class="w-3.5 h-3.5"></i>
+                            <span>Final Report</span>
+                        </a>
+                    </div>
+                    {% endif %}
+                </nav>
+
+                <!-- Action Button -->
+                <div class="flex items-center space-x-2">
+                    <button onclick="openCreateModal()" class="inline-flex items-center px-4 py-2 text-sm font-semibold rounded-xl text-white bg-brand-600 hover:bg-brand-700 shadow-sm shadow-brand-500/20 transition">
+                        <i data-lucide="plus-circle" class="w-4 h-4 mr-1.5"></i>
+                        <span>New Event</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Global Toast Notification Container -->
+    <div id="toast-container" class="fixed bottom-5 right-5 z-50 flex flex-col space-y-2 pointer-events-none"></div>
+
+    <!-- Create Event Modal -->
+    <div id="create-event-modal" class="fixed inset-0 z-50 hidden overflow-y-auto bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-100 transform transition-all">
+            <div class="flex justify-between items-center pb-4 border-b border-slate-100">
+                <div class="flex items-center space-x-2.5">
+                    <div class="w-9 h-9 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
+                        <i data-lucide="calendar-plus" class="w-5 h-5"></i>
+                    </div>
+                    <h3 class="text-lg font-bold text-slate-900">Create New Event</h3>
+                </div>
+                <button onclick="closeCreateModal()" class="text-slate-400 hover:text-slate-600">
+                    <i data-lucide="x" class="w-5 h-5"></i>
+                </button>
+            </div>
+            <form id="create-event-form" onsubmit="submitCreateEvent(event)" class="mt-5 space-y-4">
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Event Title *</label>
+                    <input type="text" name="title" required placeholder="e.g. Annual Tech Symposium 2026" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Event Date *</label>
+                        <input type="date" name="event_date" required class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Category</label>
+                        <select name="category" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                            <option value="Conference">Conference</option>
+                            <option value="Workshop">Workshop / Seminar</option>
+                            <option value="College Fest">College / University Fest</option>
+                            <option value="Corporate Meet">Corporate / Business Meet</option>
+                            <option value="Hackathon">Hackathon / Competition</option>
+                            <option value="Webinar">Webinar / Online Session</option>
+                            <option value="Social Event">Social / Community Meet</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Start Time</label>
+                        <input type="time" name="start_time" value="09:30" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">End Time</label>
+                        <input type="time" name="end_time" value="17:00" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Venue / Address</label>
+                        <input type="text" name="venue" value="Main Auditorium / Hall A" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Max Seat Capacity</label>
+                        <input type="number" name="max_capacity" value="150" min="1" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Description</label>
+                    <textarea name="description" rows="2" placeholder="Key agenda, topics covered, and guidelines..." class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition"></textarea>
+                </div>
+                <div class="flex justify-end space-x-3 pt-4 border-t border-slate-100">
+                    <button type="button" onclick="closeCreateModal()" class="px-4 py-2.5 text-sm font-semibold rounded-xl text-slate-600 hover:bg-slate-100 transition">Cancel</button>
+                    <button type="submit" class="px-5 py-2.5 text-sm font-semibold rounded-xl text-white bg-brand-600 hover:bg-brand-700 shadow-md shadow-brand-500/20 transition">Create Event</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Audio Synthesizer Beeps for QR Scanner (Zero external files needed) -->
+    <script>
+        const AudioFeedback = {
+            ctx: null,
+            init() {
+                if (!this.ctx) {
+                    const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                    if (AudioCtx) this.ctx = new AudioCtx();
+                }
+            },
+            playSuccess() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = "sine";
+                    osc.frequency.setValueAtTime(800, this.ctx.currentTime);
+                    osc.frequency.exponentialRampToValueAtTime(1200, this.ctx.currentTime + 0.15);
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.15);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.15);
+                } catch(e) {}
+            },
+            playWarning() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = "triangle";
+                    osc.frequency.setValueAtTime(400, this.ctx.currentTime);
+                    osc.frequency.setValueAtTime(300, this.ctx.currentTime + 0.1);
+                    gain.gain.setValueAtTime(0.3, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.25);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.25);
+                } catch(e) {}
+            },
+            playError() {
+                try {
+                    this.init();
+                    if (!this.ctx) return;
+                    const osc = this.ctx.createOscillator();
+                    const gain = this.ctx.createGain();
+                    osc.type = "sawtooth";
+                    osc.frequency.setValueAtTime(200, this.ctx.currentTime);
+                    gain.gain.setValueAtTime(0.4, this.ctx.currentTime);
+                    gain.gain.exponentialRampToValueAtTime(0.01, this.ctx.currentTime + 0.3);
+                    osc.connect(gain);
+                    gain.connect(this.ctx.destination);
+                    osc.start();
+                    osc.stop(this.ctx.currentTime + 0.3);
+                } catch(e) {}
+            }
+        };
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `pointer-events-auto px-4 py-3 rounded-xl shadow-lg border text-sm font-semibold flex items-center space-x-2 transform transition duration-300 translate-y-2 opacity-0 ${
+                type === 'success' ? 'bg-emerald-900 text-white border-emerald-700' :
+                type === 'error' ? 'bg-rose-900 text-white border-rose-700' :
+                type === 'warning' ? 'bg-amber-900 text-white border-amber-700' : 'bg-slate-900 text-white border-slate-700'
+            }`;
+            const icon = type === 'success' ? 'check-circle' : type === 'error' ? 'alert-octagon' : type === 'warning' ? 'alert-triangle' : 'info';
+            toast.innerHTML = `<i data-lucide="${icon}" class="w-4 h-4 shrink-0"></i><span>${message}</span>`;
+            container.appendChild(toast);
+            lucide.createIcons();
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 10);
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-4');
+                setTimeout(() => toast.remove(), 300);
+            }, 3500);
+        }
+
+        function openCreateModal() {
+            const modal = document.getElementById('create-event-modal');
+            modal.classList.remove('hidden');
+            // Set default date to today or tomorrow
+            const dateInput = modal.querySelector('input[name="event_date"]');
+            if (!dateInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+            }
+        }
+
+        function closeCreateModal() {
+            document.getElementById('create-event-modal').classList.add('hidden');
+        }
+
+        async function submitCreateEvent(e) {
+            e.preventDefault();
+            const form = e.target;
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData.entries());
+            data.max_capacity = parseInt(data.max_capacity) || 100;
+            
+            try {
+                const res = await fetch('/api/events', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify(data)
+                });
+                const result = await res.json();
+                if (res.ok) {
+                    showToast('Event created successfully!', 'success');
+                    setTimeout(() => {
+                        window.location.href = `/events/${result.event_id}`;
+                    }, 500);
+                } else {
+                    showToast(result.detail || 'Failed to create event', 'error');
+                }
+            } catch (err) {
+                showToast('Error connecting to server', 'error');
+            }
+        }
+
+        // Initialize lucide icons on load
+        document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
+        });
+    </script>
+    {% block extra_scripts %}{% endblock %}
+</body>
+</html>
