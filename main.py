@@ -25,6 +25,8 @@ import sample_data
 os.makedirs(os.path.join(os.path.dirname(__file__), "static"), exist_ok=True)
 
 app = FastAPI(title="EventPulse - Event Operations Platform")
+ADMIN_USERNAME = "admin"
+ADMIN_PASSWORD = "P@$$word123"
 
 # Templates
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
@@ -630,3 +632,15 @@ if __name__ == "__main__":
     import uvicorn
     print("Starting EventPulse Server at http://127.0.0.1:8000 ...")
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+# --- ADMIN LOGIN ROUTES ---
+
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_login_page(request: Request):
+    return templates.TemplateResponse("admin_login.html", {"request": request, "error": None})
+
+@app.post("/admin", response_class=HTMLResponse)
+async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        return templates.TemplateResponse("admin_dashboard.html", {"request": request})
+    else:
+        return templates.TemplateResponse("admin_login.html", {"request": request, "error": "Invalid Username or Password!"})
