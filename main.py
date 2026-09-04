@@ -24,7 +24,7 @@ import sample_data
 # Ensure static directory exists
 os.makedirs(os.path.join(os.path.dirname(__file__), "static"), exist_ok=True)
 
-app = FastAPI(title="EventPulse - Event Operations Platform")
+app = FastAPI(title="Albirr Events - Event Operations Platform")
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "P@$$word123"
 
