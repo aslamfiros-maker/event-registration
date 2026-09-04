@@ -642,12 +642,19 @@ if __name__ == "__main__":
 
 @app.get("/admin", response_class=HTMLResponse)
 async def admin_login_page(request: Request):
-    return templates.TemplateResponse("admin_login.html", {"request": request, "error": None})
+    return templates.TemplateResponse(
+        request=request, 
+        name="admin_login.html", 
+        context={"error": None}
+    )
 
 @app.post("/admin", response_class=HTMLResponse)
 async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        # ലോഗിൻ വിജയിച്ചാൽ ഡാഷ്‌ബോർഡിലേക്ക് തിരിച്ചുവിടും
         return RedirectResponse(url="/dashboard", status_code=303)
     else:
-        return templates.TemplateResponse("admin_login.html", {"request": request, "error": "Invalid Username or Password!"})
+        return templates.TemplateResponse(
+            request=request, 
+            name="admin_login.html", 
+            context={"error": "Invalid Username or Password!"}
+        )
