@@ -636,6 +636,7 @@ if __name__ == "__main__":
     import uvicorn
     print("Starting EventPulse Server at http://127.0.0.1:8000 ...")
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+
 # --- ADMIN LOGIN ROUTES ---
 
 @app.get("/admin", response_class=HTMLResponse)
@@ -645,6 +646,7 @@ async def admin_login_page(request: Request):
 @app.post("/admin", response_class=HTMLResponse)
 async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        return templates.TemplateResponse("dashboard.html", {"request": request})
+        # ലോഗിൻ വിജയിച്ചാൽ ഡാഷ്‌ബോർഡിലേക്ക് തിരിച്ചുവിടും
+        return RedirectResponse(url="/dashboard", status_code=303)
     else:
         return templates.TemplateResponse("admin_login.html", {"request": request, "error": "Invalid Username or Password!"})
