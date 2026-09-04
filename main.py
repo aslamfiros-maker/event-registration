@@ -86,9 +86,9 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
 # HTML PAGE ROUTES
 # -------------------------------------------------------------
 
-@app.get("/", response_class=HTMLResponse)
-async def home_registration(request: Request):
-    return templates.TemplateResponse(request=request, name="register.html")
+@app.get("/")
+async def home_redirect():
+    return RedirectResponse(url="/admin")
 
 
 @app.get("/dashboard", response_class=HTMLResponse)
