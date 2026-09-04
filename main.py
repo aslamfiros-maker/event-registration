@@ -3,7 +3,7 @@ from datetime import datetime
 from typing import Optional, List, Dict, Any
 
 from fastapi import FastAPI, Request, HTTPException, Form, Depends, status
-from fastapi.responses import RedirectResponse
+from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
