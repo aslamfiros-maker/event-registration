@@ -654,7 +654,8 @@ async def admin_login_page(request: Request):
 async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
         response = RedirectResponse(url="/dashboard", status_code=303)
-        response.set_cookie("admin_session", value="authenticated", httponly=True)
+        response.set_cookie(key="admin_session", value="authenticated", httponly=True)
+        return response
     else:
         return templates.TemplateResponse(
             request=request, 
