@@ -1,29 +1,528 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Admin Login</title>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#050505" />
+    <title>Welcome back</title>
     <style>
-        body { font-family: Arial, sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; background: #f4f4f9; margin: 0; }
-        .login-card { background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); width: 300px; }
-        h2 { text-align: center; margin-bottom: 20px; }
-        input { width: 100%; padding: 10px; margin-bottom: 15px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-        button { width: 100%; padding: 10px; background: #007bff; color: white; border: none; border-radius: 4px; font-weight: bold; cursor: pointer; }
-        button:hover { background: #0056b3; }
-        .error { color: red; font-size: 14px; text-align: center; margin-bottom: 10px; }
+      @import url("https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap");
+
+      :root {
+        color-scheme: dark;
+        font-family: "DM Sans", system-ui, sans-serif;
+        background: #050505;
+        color: #f8f5ed;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-width: 320px;
+        min-height: 100vh;
+        overflow: hidden;
+        background: #050505;
+      }
+
+      button,
+      input {
+        font: inherit;
+      }
+
+      .page {
+        position: relative;
+        min-height: 100vh;
+        overflow: hidden;
+        isolation: isolate;
+        background: #000;
+      }
+
+      .brand {
+        position: absolute;
+        top: 32px;
+        left: 38px;
+        z-index: 5;
+        display: flex;
+        align-items: center;
+        gap: 11px;
+        color: #fff;
+        font-size: 15px;
+        font-weight: 700;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+      }
+
+      .brand-mark {
+        width: 11px;
+        height: 11px;
+        border-radius: 50%;
+        background: #f5c85b;
+        box-shadow: 0 0 18px rgba(245, 200, 91, 0.75);
+      }
+
+      .visual {
+        position: absolute;
+        inset: 0;
+        min-height: 100vh;
+        overflow: hidden;
+        background: #000;
+      }
+
+      .visual video {
+        width: 100%;
+        height: 100%;
+        min-height: 100vh;
+        display: block;
+        object-fit: cover;
+        object-position: center;
+      }
+
+      .visual::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.25;
+        background: linear-gradient(180deg, rgba(0, 0, 0, 0.18), transparent 45%, rgba(0, 0, 0, 0.52));
+        transition: opacity 700ms ease, background 700ms ease;
+      }
+
+      .page.is-lit .visual::after {
+        opacity: 1;
+        background: rgba(2, 5, 8, 0.48);
+      }
+
+      .tagline {
+        position: absolute;
+        z-index: 4;
+        left: 40px;
+        bottom: 38px;
+        max-width: 420px;
+        margin: 0;
+        color: rgba(255, 255, 255, 0.58);
+        font-size: 13px;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        transition: opacity 400ms ease, transform 400ms ease;
+      }
+
+      .page.is-lit .tagline {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+
+      .login-side {
+        position: absolute;
+        z-index: 6;
+        inset: 0;
+        display: grid;
+        align-items: center;
+        justify-items: end;
+        min-height: 100vh;
+        padding: 80px clamp(32px, 7vw, 112px) 40px 24px;
+        overflow: hidden;
+        isolation: isolate;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transition: visibility 0s linear 750ms, opacity 450ms ease;
+      }
+
+      .page.is-lit .login-side {
+        visibility: visible;
+        opacity: 1;
+        pointer-events: auto;
+        transition-delay: 0s;
+      }
+
+      .beam-flash {
+        position: absolute;
+        z-index: 0;
+        left: -20%;
+        top: 18%;
+        width: 140%;
+        height: 64%;
+        opacity: 0;
+        transform: translateX(-45%) skewX(-11deg);
+        transform-origin: left center;
+        background: linear-gradient(
+          90deg,
+          rgba(247, 198, 83, 0.4),
+          rgba(247, 198, 83, 0.1) 46%,
+          transparent 78%
+        );
+        filter: blur(32px);
+        pointer-events: none;
+      }
+
+      .page.is-lit .beam-flash {
+        animation: light-sweep 900ms ease-out both;
+      }
+
+      .login-card {
+        position: relative;
+        z-index: 1;
+        width: min(100%, 360px);
+        padding: 30px;
+        border: 1px solid rgba(255, 255, 255, 0.18);
+        border-radius: 28px;
+        background: linear-gradient(145deg, rgba(255, 255, 255, 0.14), rgba(12, 14, 16, 0.38));
+        box-shadow:
+          0 30px 90px rgba(0, 0, 0, 0.5),
+          inset 0 1px 0 rgba(255, 255, 255, 0.16);
+        backdrop-filter: blur(24px) saturate(135%);
+        -webkit-backdrop-filter: blur(24px) saturate(135%);
+        opacity: 0;
+        transform: translateY(28px) scale(0.94);
+        filter: blur(8px);
+      }
+
+      .page.is-lit .login-card {
+        animation: card-pop 850ms cubic-bezier(0.16, 1, 0.3, 1) 180ms forwards;
+      }
+
+      .eyebrow {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        margin: 0 0 14px;
+        color: #e8bc57;
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .eyebrow::before {
+        content: "";
+        width: 22px;
+        height: 1px;
+        background: currentColor;
+      }
+
+      h1 {
+        margin: 0;
+        font-size: clamp(34px, 3.5vw, 46px);
+        line-height: 1;
+        letter-spacing: -0.045em;
+      }
+
+      .intro {
+        margin: 14px 0 24px;
+        color: #858585;
+        font-size: 15px;
+        line-height: 1.6;
+      }
+
+      .field {
+        display: grid;
+        gap: 9px;
+        margin-bottom: 14px;
+      }
+
+      label {
+        color: #b8b8b8;
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .input-wrap {
+        position: relative;
+      }
+
+      input {
+        width: 100%;
+        height: 48px;
+        border: 1px solid rgba(255, 255, 255, 0.14);
+        border-radius: 12px;
+        outline: none;
+        padding: 0 16px;
+        background: rgba(4, 7, 9, 0.5);
+        color: #f7f7f7;
+        transition: border-color 180ms ease, box-shadow 180ms ease, background 180ms ease;
+      }
+
+      input::placeholder {
+        color: #505050;
+      }
+
+      input:focus {
+        border-color: #bc9849;
+        background: rgba(17, 16, 13, 0.68);
+        box-shadow: 0 0 0 4px rgba(230, 181, 72, 0.09);
+      }
+
+      .password-input {
+        padding-right: 62px;
+      }
+
+      .show-password {
+        position: absolute;
+        top: 50%;
+        right: 13px;
+        transform: translateY(-50%);
+        border: 0;
+        padding: 7px;
+        background: transparent;
+        color: #777;
+        font-size: 12px;
+        cursor: pointer;
+      }
+
+      .options {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 18px;
+        margin: 4px 0 20px;
+        font-size: 13px;
+      }
+
+      .remember {
+        display: flex;
+        align-items: center;
+        gap: 9px;
+        color: #777;
+        cursor: pointer;
+      }
+
+      .remember input {
+        width: 15px;
+        height: 15px;
+        margin: 0;
+        accent-color: #e8b94e;
+      }
+
+      a {
+        color: #d1aa53;
+        text-decoration: none;
+      }
+
+      a:hover {
+        color: #f0c45e;
+      }
+
+      .submit {
+        width: 100%;
+        height: 48px;
+        border: 0;
+        border-radius: 12px;
+        background: #efc35b;
+        color: #171208;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 14px 34px rgba(221, 168, 48, 0.15);
+        transition: transform 170ms ease, background 170ms ease, box-shadow 170ms ease;
+      }
+
+      .submit:hover {
+        transform: translateY(-2px);
+        background: #f8ce6c;
+        box-shadow: 0 18px 40px rgba(221, 168, 48, 0.22);
+      }
+
+      .submit:active {
+        transform: translateY(0);
+      }
+
+      .signup {
+        margin: 20px 0 0;
+        color: #666;
+        text-align: center;
+        font-size: 13px;
+      }
+
+      .message {
+        min-height: 20px;
+        margin: 12px 0 -8px;
+        color: #9bcd8c;
+        text-align: center;
+        font-size: 13px;
+      }
+
+      @keyframes light-sweep {
+        0% {
+          opacity: 0;
+          transform: translateX(-34%) skewX(-11deg);
+        }
+        32% {
+          opacity: 0.78;
+        }
+        100% {
+          opacity: 0;
+          transform: translateX(62%) skewX(-11deg);
+        }
+      }
+
+      @keyframes card-pop {
+        0% {
+          opacity: 0;
+          transform: translateY(28px) scale(0.94);
+          filter: blur(8px);
+        }
+        58% {
+          opacity: 1;
+          transform: translateY(-4px) scale(1.012);
+          filter: blur(0);
+        }
+        100% {
+          opacity: 1;
+          transform: translateY(0) scale(1);
+          filter: blur(0);
+        }
+      }
+
+      @media (max-width: 800px) {
+        .brand {
+          top: 22px;
+          left: 24px;
+        }
+
+        .visual,
+        .visual video {
+          min-height: 100vh;
+          height: 100vh;
+        }
+
+        .visual video {
+          object-position: center;
+        }
+
+        .visual::after {
+          background: linear-gradient(180deg, rgba(0, 0, 0, 0.12), transparent 50%, rgba(0, 0, 0, 0.6));
+        }
+
+        .tagline {
+          display: none;
+        }
+
+        .login-side {
+          justify-items: center;
+          min-height: 100vh;
+          padding: 72px 16px 24px;
+        }
+
+        .beam-flash {
+          top: 5%;
+          left: 0;
+          width: 100%;
+        }
+
+        .login-card {
+          max-height: calc(100vh - 90px);
+          overflow-y: auto;
+          border-radius: 22px;
+        }
+
+        h1 {
+          font-size: 34px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .page.is-lit .login-card {
+          opacity: 1;
+          transform: none;
+          filter: none;
+        }
+
+        .beam-flash,
+        .page.is-lit .beam-flash,
+        .page.is-lit .login-card {
+          animation: none;
+        }
+      }
     </style>
-</head>
-<body>
-    <div class="login-card">
-        <h2>Admin Login</h2>
-        {% if error %}
-            <p class="error">{{ error }}</p>
-        {% endif %}
-        <form action="/admin" method="post">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <button type="submit">Login</button>
-        </form>
-    </div>
-</body>
+  </head>
+  <body>
+    <main class="page" id="page">
+      <div class="brand"><span class="brand-mark"></span>EventPlus Pro</div>
+
+      <section class="visual" aria-label="Animated lighthouse">
+        <video id="lighthouse" autoplay muted playsinline preload="auto">
+          <source src="./nprv.mp4" type="video/mp4" />
+        </video>
+        
+      </section>
+
+      <section class="login-side" id="loginOverlay" aria-hidden="true">
+        <div class="beam-flash" aria-hidden="true"></div>
+
+        <div class="login-card">
+          <p class="eyebrow">Member access</p>
+          <h1>Welcome back.</h1>
+          <p class="intro">Sign in to continue your journey.</p>
+
+          <form id="loginForm">
+            <div class="field">
+              <label for="email">Email address</label>
+              <div class="input-wrap">
+                <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="password">Password</label>
+              <div class="input-wrap">
+                <input class="password-input" id="password" name="password" type="password" placeholder="Enter your password" autocomplete="current-password" minlength="6" required />
+                <button class="show-password" id="showPassword" type="button" aria-label="Show password">Show</button>
+              </div>
+            </div>
+
+            <div class="options">
+              <label class="remember"><input type="checkbox" name="remember" /> Remember me</label>
+              <a href="#">Forgot password?</a>
+            </div>
+
+            <button class="submit" type="submit">Sign in</button>
+            <p class="message" id="message" role="status" aria-live="polite"></p>
+          </form>
+
+          <p class="signup">New here? <a href="#">Create an account</a></p>
+        </div>
+      </section>
+    </main>
+
+    <script>
+      const page = document.getElementById("page");
+      const video = document.getElementById("lighthouse");
+      const loginOverlay = document.getElementById("loginOverlay");
+      const form = document.getElementById("loginForm");
+      const email = document.getElementById("email");
+      const password = document.getElementById("password");
+      const showPassword = document.getElementById("showPassword");
+      const message = document.getElementById("message");
+      let revealed = false;
+
+      function revealLogin() {
+        if (revealed) return;
+        revealed = true;
+        video.pause();
+        page.classList.add("is-lit");
+        loginOverlay.setAttribute("aria-hidden", "false");
+        window.setTimeout(() => email.focus(), 850);
+      }
+
+      video.addEventListener("ended", revealLogin);
+      video.addEventListener("error", revealLogin);
+      video.play().catch(revealLogin);
+
+      showPassword.addEventListener("click", () => {
+        const isHidden = password.type === "password";
+        password.type = isHidden ? "text" : "password";
+        showPassword.textContent = "Hide";
+        if (!isHidden) showPassword.textContent = "Show";
+        showPassword.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
+      });
+
+      form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        if (!form.reportValidity()) return;
+        message.textContent = "You're all set — welcome back.";
+      });
+    </script>
+  </body>
 </html>
