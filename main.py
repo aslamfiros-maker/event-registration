@@ -154,23 +154,18 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
 # AUTH & HTML PAGE ROUTES
 # -------------------------------------------------------------
 
-@app.post("/", response_class=HTMLResponse)
-async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        response = RedirectResponse(url="/dashboard", status_code=303)
-        response.set_cookie(
-            key="admin_session", 
-            value="authenticated", 
-            httponly=True, 
-            samesite="lax"
-        )
-        return response
-    else:
-        return templates.TemplateResponse(
-            request=request, 
-            name="admin_login.html", 
-            context={"error": "Invalid Username or Password!"}
-        )
+@app.get("/", response_class=HTMLResponse)
+async def root(request: Request):
+    # അഡ്മിൻ ഇതിനകം ലോഗിൻ ചെയ്തിട്ടുണ്ടെങ്കിൽ നേരിട്ട് ഡാഷ്‌ബോർഡിലേക്ക് വിടുന്നു
+    if request.cookies.get("admin_session") == "authenticated":
+        return RedirectResponse(url="/dashboard", status_code=303)
+    
+    # ലോഗിൻ ചെയ്തിട്ടില്ലെങ്കിൽ നേരിട്ട് അഡ്മിൻ ലോഗിൻ പേജ് കാണിക്കുന്നു
+    return templates.TemplateResponse(
+        request=request, 
+        name="admin_login.html", 
+        context={"error": None}
+    )
 
 @app.get("/logout")
 async def admin_logout():
