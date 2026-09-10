@@ -496,7 +496,7 @@ def create_event(data: EventCreate):
     cur = conn.cursor()
     cur.execute("""
     INSERT INTO events (title, description, category, event_date, start_time, end_time, venue, location_type, banner_url, max_capacity, status)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
     """, (
         data.title,
         data.description,
