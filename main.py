@@ -207,45 +207,34 @@ def index_page(request: Request):
     if request.cookies.get("admin_session") != "authenticated":
         return RedirectResponse(url="/admin", status_code=303)
     
+    conn = get_db_connection()
+    cur = conn.cursor()
+    cur.execute("SELECT * FROM events ORDER BY event_date DESC, id DESC;")
+    events_raw = [dict(r) for r in cur.fetchall()]
+
     events = []
     total_reg = 0
     total_att = 0
     total_abs = 0
 
-    conn = None
-    cur = None
-    try:
-        if DATABASE_URL:
-            # ടേബിളുകൾ ഉണ്ടെന്ന് ഉറപ്പുവരുത്തുന്നു
-            init_db()
-            
-            conn = get_db_connection()
-            cur = conn.cursor()
-            cur.execute("SELECT * FROM events ORDER BY event_date DESC, id DESC;")
-            events_raw = [dict(r) for r in cur.fetchall()]
+    for ev in events_raw:
+        # datetime.date ഒബ്ജക്റ്റിനെ Jinja2-ന് വായിക്കാൻ പറ്റുന്ന വിധം String ആക്കി മാറ്റുന്നു
+        if ev.get("event_date"):
+            ev["event_date"] = str(ev["event_date"])
 
-            for ev in events_raw:
-                cur.execute("SELECT status, is_walkin FROM attendees WHERE event_id = %s;", (ev["id"],))
-                rows = [dict(r) for r in cur.fetchall()]
-                ev["registered_count"] = len(rows)
-                ev["attended_count"] = sum(1 for r in rows if r["status"] == "Attended")
-                ev["absent_count"] = sum(1 for r in rows if r["status"] == "Registered")
-                
-                total_reg += ev["registered_count"]
-                total_att += ev["attended_count"]
-                total_abs += ev["absent_count"]
-                events.append(ev)
-        else:
-            print("DATABASE_URL is not set!")
-    except Exception as e:
-        print(f"Dashboard query error: {e}")
-        events = []
-    finally:
-        if cur:
-            cur.close()
-        if conn:
-            conn.close()
+        cur.execute("SELECT status, is_walkin FROM attendees WHERE event_id = %s;", (ev["id"],))
+        rows = [dict(r) for r in cur.fetchall()]
+        ev["registered_count"] = len(rows)
+        ev["attended_count"] = sum(1 for r in rows if r["status"] == "Attended")
+        ev["absent_count"] = sum(1 for r in rows if r["status"] == "Registered")
+        
+        total_reg += ev["registered_count"]
+        total_att += ev["attended_count"]
+        total_abs += ev["absent_count"]
+        events.append(ev)
 
+    cur.close()
+    conn.close()
     return templates.TemplateResponse(
         request=request,
         name="dashboard.html",
