@@ -1,4 +1,7 @@
 import os
+import json
+import psycopg2
+from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 
@@ -7,8 +10,6 @@ from fastapi.responses import RedirectResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-import json
-from database import init_db, get_db_connection, get_default_form_fields
 from models import (
     EventCreate, EventUpdate, AttendeeRegister, WalkinRegister,
     CheckinRequest, FollowupUpdate, FormFieldConfig, EventFormConfigUpdate
@@ -21,41 +22,89 @@ from services import (
 )
 import sample_data
 
-# Ensure static directory exists
-os.makedirs(os.path.join(os.path.dirname(__file__), "static"), exist_ok=True)
+# 1. ഡാറ്റാബേസ് കോൺഫിഗറേഷൻ
+DATABASE_URL = os.getenv("DATABASE_URL")
 
+def get_db_connection():
+    return psycopg2.connect(DATABASE_URL, cursor_factory=RealDictCursor)
+
+def init_db():
+    if not DATABASE_URL:
+        print("DATABASE_URL is not set!")
+        return
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS events (
+                id SERIAL PRIMARY KEY,
+                title VARCHAR(255) NOT NULL,
+                event_date DATE NOT NULL,
+                category VARCHAR(100),
+                start_time TIME,
+                end_time TIME,
+                venue VARCHAR(255),
+                max_capacity INT DEFAULT 100,
+                description TEXT,
+                custom_fields_config TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            CREATE TABLE IF NOT EXISTS registrations (
+                id SERIAL PRIMARY KEY,
+                event_id INT REFERENCES events(id) ON DELETE CASCADE,
+                name VARCHAR(255) NOT NULL,
+                email VARCHAR(255),
+                phone VARCHAR(50),
+                status VARCHAR(50) DEFAULT 'Registered',
+                is_walkin INT DEFAULT 0,
+                attended BOOLEAN DEFAULT FALSE,
+                registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+        """)
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("Database tables initialized successfully!")
+    except Exception as e:
+        print(f"Error initializing database: {e}")
+
+# 2. FastAPI ആപ്പ് നിർമ്മിക്കുന്നു (ഒരു തവണ മാത്രം)
 app = FastAPI(title="Albirr Events - Event Operations Platform")
-ADMIN_USERNAME = "schoolalbirr@gmail.com"
-ADMIN_PASSWORD = "admin"
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Admin@123")
 
-# Templates
+# 3. സ്റ്റാറ്റിക് ഫോൾഡറും ടെംപ്ലേറ്റുകളും
+STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
+os.makedirs(STATIC_DIR, exist_ok=True)
+app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
+
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
 
-# Initialize DB on start
+# 4. ആപ്പ് സ്റ്റാർട്ടപ്പ്
 @app.on_event("startup")
 def startup_event():
     init_db()
 
-# Helper to get event with stats
+# 5. ഹെൽപ്പർ ഫംഗ്ഷനുകൾ (%s ഉപയോഗിച്ച് ശരിയാക്കിയത്)
 def get_event_by_id(event_id: int):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM events WHERE id = ?;", (event_id,))
+    cur.execute("SELECT * FROM events WHERE id = %s;", (event_id,))
     row = cur.fetchone()
+    cur.close()
     conn.close()
     if not row:
         return None
     return dict(row)
 
-# Helper for event metrics
 def calculate_event_metrics(event_id: int):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM attendees WHERE event_id = ?;", (event_id,))
+    cur.execute("SELECT * FROM registrations WHERE event_id = %s;", (event_id,))
     attendees = [dict(r) for r in cur.fetchall()]
+    cur.close()
     conn.close()
 
     total = len(attendees)
@@ -74,7 +123,6 @@ def calculate_event_metrics(event_id: int):
     }
 
 def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
-    """Get field definitions for an event, falling back to default schema."""
     if event and event.get("custom_fields_config"):
         try:
             fields = json.loads(event["custom_fields_config"])
@@ -82,7 +130,7 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
                 return fields
         except Exception:
             pass
-    return get_default_form_fields()
+    return []
 
 # -------------------------------------------------------------
 # HTML PAGE ROUTES
