@@ -95,14 +95,30 @@ async def root(request: Request):
 
 
 # 2. അഡ്മിൻ ലോഗിൻ പേജ് കാണിക്കാൻ
-@app.get("/admin", response_class=HTMLResponse)
-async def admin_login_page(request: Request):
-    return templates.TemplateResponse(
-        request=request, 
-        name="admin_login.html", 
-        context={"error": None}
-    )
-
+@app.post("/admin", response_class=HTMLResponse)
+async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
+    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
+        response = RedirectResponse(url="/dashboard", status_code=303)
+        response.set_cookie(
+            key="admin_session", 
+            value="authenticated", 
+            httponly=True, 
+            samesite="lax"
+        )
+        return response
+    else:
+        return templates.TemplateResponse(
+            request=request, 
+            name="admin_login.html", 
+            context={"error": "Invalid Username or Password!"}
+        )
+        
+# 2.ലോഗ് ഔട്ട് ചെയ്യാൻ
+@app.get("/logout")
+async def admin_logout():
+    response = RedirectResponse(url="/admin", status_code=303)
+    response.delete_cookie(key="admin_session")
+    return response
 
 # 3. ഡാഷ്‌ബോർഡ് പേജ് (ഡാറ്റാബേസ് കോഡ് ഇതിന്റെ ഉള്ളിൽ വരണം)
 @app.get("/dashboard", response_class=HTMLResponse)
