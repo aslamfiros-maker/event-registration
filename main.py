@@ -4,9 +4,10 @@ import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from typing import Optional, List, Dict, Any
+from pydantic import BaseModel
 
 from fastapi import FastAPI, Request, HTTPException, Form, Depends, status
-from fastapi.responses import RedirectResponse, HTMLResponse
+from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
@@ -41,24 +42,41 @@ def init_db():
                 title VARCHAR(255) NOT NULL,
                 event_date DATE NOT NULL,
                 category VARCHAR(100),
-                start_time TIME,
-                end_time TIME,
+                start_time VARCHAR(20),
+                end_time VARCHAR(20),
                 venue VARCHAR(255),
                 max_capacity INT DEFAULT 100,
                 description TEXT,
                 custom_fields_config TEXT,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             );
-            CREATE TABLE IF NOT EXISTS registrations (
+            
+            CREATE TABLE IF NOT EXISTS attendees (
                 id SERIAL PRIMARY KEY,
                 event_id INT REFERENCES events(id) ON DELETE CASCADE,
-                name VARCHAR(255) NOT NULL,
+                ticket_code VARCHAR(100) UNIQUE,
+                full_name VARCHAR(255) NOT NULL,
                 email VARCHAR(255),
                 phone VARCHAR(50),
+                organization VARCHAR(255),
+                role VARCHAR(100),
+                notes TEXT,
                 status VARCHAR(50) DEFAULT 'Registered',
                 is_walkin INT DEFAULT 0,
-                attended BOOLEAN DEFAULT FALSE,
+                checkin_at VARCHAR(50),
+                custom_data TEXT,
                 registered_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS followups (
+                id SERIAL PRIMARY KEY,
+                event_id INT REFERENCES events(id) ON DELETE CASCADE,
+                attendee_id INT UNIQUE REFERENCES attendees(id) ON DELETE CASCADE,
+                status VARCHAR(50),
+                channel VARCHAR(50) DEFAULT 'WhatsApp',
+                reason_category VARCHAR(100) DEFAULT 'Not Specified',
+                notes TEXT,
+                updated_at VARCHAR(50)
             );
         """)
         conn.commit()
@@ -68,7 +86,7 @@ def init_db():
     except Exception as e:
         print(f"Error initializing database: {e}")
 
-# 2. FastAPI ആപ്പ് നിർമ്മിക്കുന്നു (ഒരു തവണ മാത്രം)
+# 2. FastAPI ആപ്പ്
 app = FastAPI(title="Albirr Events - Event Operations Platform")
 
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
@@ -87,7 +105,7 @@ templates = Jinja2Templates(directory=templates_dir)
 def startup_event():
     init_db()
 
-# 5. ഹെൽപ്പർ ഫംഗ്ഷനുകൾ (%s ഉപയോഗിച്ച് ശരിയാക്കിയത്)
+# 5. ഹെൽപ്പർ ഫംഗ്ഷനുകൾ
 def get_event_by_id(event_id: int):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -102,7 +120,7 @@ def get_event_by_id(event_id: int):
 def calculate_event_metrics(event_id: int):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM registrations WHERE event_id = %s;", (event_id,))
+    cur.execute("SELECT * FROM attendees WHERE event_id = %s;", (event_id,))
     attendees = [dict(r) for r in cur.fetchall()]
     cur.close()
     conn.close()
@@ -133,18 +151,23 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
     return []
 
 # -------------------------------------------------------------
-# HTML PAGE ROUTES
+# AUTH & HTML PAGE ROUTES
 # -------------------------------------------------------------
 
-# 1. പ്രധാന ലിങ്കിൽ വരുമ്പോൾ (Root Route - ഒരു തവണ മാത്രം മതി)
 @app.get("/")
 async def root(request: Request):
     if request.cookies.get("admin_session") == "authenticated":
         return RedirectResponse(url="/dashboard", status_code=303)
     return RedirectResponse(url="/admin", status_code=303)
 
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_login_page(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="admin_login.html", 
+        context={"error": None}
+    )
 
-# 2. അഡ്മിൻ ലോഗിൻ പേജ് കാണിക്കാൻ
 @app.post("/admin", response_class=HTMLResponse)
 async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
@@ -162,18 +185,15 @@ async def admin_login_submit(request: Request, username: str = Form(...), passwo
             name="admin_login.html", 
             context={"error": "Invalid Username or Password!"}
         )
-        
-# 2.ലോഗ് ഔട്ട് ചെയ്യാൻ
+
 @app.get("/logout")
 async def admin_logout():
     response = RedirectResponse(url="/admin", status_code=303)
     response.delete_cookie(key="admin_session")
     return response
 
-# 3. ഡാഷ്‌ബോർഡ് പേജ് (ഡാറ്റാബേസ് കോഡ് ഇതിന്റെ ഉള്ളിൽ വരണം)
 @app.get("/dashboard", response_class=HTMLResponse)
 def index_page(request: Request):
-
     if request.cookies.get("admin_session") != "authenticated":
         return RedirectResponse(url="/admin", status_code=303)
     
@@ -182,14 +202,13 @@ def index_page(request: Request):
     cur.execute("SELECT * FROM events ORDER BY event_date DESC, id DESC;")
     events_raw = [dict(r) for r in cur.fetchall()]
 
-    # Fetch stats for each event
     events = []
     total_reg = 0
     total_att = 0
     total_abs = 0
 
     for ev in events_raw:
-        cur.execute("SELECT status, is_walkin FROM attendees WHERE event_id = ?;", (ev["id"],))
+        cur.execute("SELECT status, is_walkin FROM attendees WHERE event_id = %s;", (ev["id"],))
         rows = [dict(r) for r in cur.fetchall()]
         ev["registered_count"] = len(rows)
         ev["attended_count"] = sum(1 for r in rows if r["status"] == "Attended")
@@ -200,6 +219,7 @@ def index_page(request: Request):
         total_abs += ev["absent_count"]
         events.append(ev)
 
+    cur.close()
     conn.close()
     return templates.TemplateResponse(
         request=request,
@@ -274,15 +294,17 @@ def register_page(request: Request, event_id: int):
 def ticket_page(request: Request, ticket_code: str):
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM attendees WHERE ticket_code = ?;", (ticket_code,))
+    cur.execute("SELECT * FROM attendees WHERE ticket_code = %s;", (ticket_code,))
     attendee_row = cur.fetchone()
     if not attendee_row:
+        cur.close()
         conn.close()
         raise HTTPException(status_code=404, detail="Ticket pass not found")
 
     attendee = dict(attendee_row)
-    cur.execute("SELECT * FROM events WHERE id = ?;", (attendee["event_id"],))
+    cur.execute("SELECT * FROM events WHERE id = %s;", (attendee["event_id"],))
     event_row = cur.fetchone()
+    cur.close()
     conn.close()
     if not event_row:
         raise HTTPException(status_code=404, detail="Event not found")
@@ -330,13 +352,12 @@ def followup_page(request: Request, event_id: int):
     conn = get_db_connection()
     cur = conn.cursor()
     
-    # Get absent attendees
-    cur.execute("SELECT * FROM attendees WHERE event_id = ? AND status = 'Registered' ORDER BY id ASC;", (event_id,))
+    cur.execute("SELECT * FROM attendees WHERE event_id = %s AND status = 'Registered' ORDER BY id ASC;", (event_id,))
     absentees_raw = [dict(r) for r in cur.fetchall()]
 
-    # Get follow-up records
-    cur.execute("SELECT * FROM followups WHERE event_id = ?;", (event_id,))
+    cur.execute("SELECT * FROM followups WHERE event_id = %s;", (event_id,))
     fup_map = {r["attendee_id"]: dict(r) for r in cur.fetchall()}
+    cur.close()
     conn.close()
 
     absentees = []
@@ -385,11 +406,12 @@ def report_page(request: Request, event_id: int):
 
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM attendees WHERE event_id = ? ORDER BY id ASC;", (event_id,))
+    cur.execute("SELECT * FROM attendees WHERE event_id = %s ORDER BY id ASC;", (event_id,))
     attendees_raw = [dict(r) for r in cur.fetchall()]
 
-    cur.execute("SELECT * FROM followups WHERE event_id = ?;", (event_id,))
+    cur.execute("SELECT * FROM followups WHERE event_id = %s;", (event_id,))
     fup_map = {r["attendee_id"]: dict(r) for r in cur.fetchall()}
+    cur.close()
     conn.close()
 
     total = len(attendees_raw)
@@ -413,9 +435,8 @@ def report_page(request: Request, event_id: int):
         if a["status"] == "Attended":
             attended += 1
             if a.get("checkin_at"):
-                # extract hour, e.g. "09:00"
                 try:
-                    time_part = a["checkin_at"].split()[1] # "09:22:15"
+                    time_part = a["checkin_at"].split()[1]
                     hour_bucket = time_part[:2] + ":00"
                     arrival_counts_map[hour_bucket] = arrival_counts_map.get(hour_bucket, 0) + 1
                 except Exception:
@@ -424,10 +445,7 @@ def report_page(request: Request, event_id: int):
             absent += 1
             if fup:
                 r_cat = fup.get("reason_category", "Not Specified")
-                if r_cat in reason_counts:
-                    reason_counts[r_cat] += 1
-                else:
-                    reason_counts["Not Specified / Other"] += 1
+                reason_counts[r_cat] = reason_counts.get(r_cat, 0) + 1
             else:
                 reason_counts["Not Specified / Other"] += 1
 
@@ -462,18 +480,12 @@ def report_page(request: Request, event_id: int):
 
 @app.post("/events/{event_id}/delete")
 async def delete_event(request: Request, event_id: int):
-    # അഡ്മിൻ ലോഗിൻ ചെയ്തിട്ടുണ്ടോ എന്ന് പരിശോധിക്കുന്നു
     if request.cookies.get("admin_session") != "authenticated":
         return RedirectResponse(url="/admin", status_code=303)
     
     conn = get_db_connection()
     cur = conn.cursor()
     try:
-        # ഇവന്റുമായി ബന്ധപ്പെട്ട ഫോം ഫീൽഡുകൾ, രജിസ്ട്രേഷനുകൾ എന്നിവ ഉണ്ടെങ്കിൽ ആദ്യം ഒഴിവാക്കുന്നു
-        cur.execute("DELETE FROM registrations WHERE event_id = %s;", (event_id,))
-        cur.execute("DELETE FROM form_fields WHERE event_id = %s;", (event_id,))
-        
-        # പ്രധാന ഇവന്റ് ഡിലീറ്റ് ചെയ്യുന്നു
         cur.execute("DELETE FROM events WHERE id = %s;", (event_id,))
         conn.commit()
     except Exception as e:
@@ -491,29 +503,40 @@ async def delete_event(request: Request, event_id: int):
 # -------------------------------------------------------------
 
 @app.post("/api/events")
-def create_event(data: EventCreate):
-    conn = get_db_connection()
-    cur = conn.cursor()
-    cur.execute("""
-    INSERT INTO events (title, description, category, event_date, start_time, end_time, venue, location_type, banner_url, max_capacity, status)
-    VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s);
-    """, (
-        data.title,
-        data.description,
-        data.category,
-        data.event_date,
-        data.start_time,
-        data.end_time,
-        data.venue,
-        data.location_type,
-        data.banner_url,
-        data.max_capacity,
-        data.status or "Upcoming"
-    ))
-    event_id = cur.lastrowid
-    conn.commit()
-    conn.close()
-    return {"message": "Event created", "event_id": event_id}
+async def create_event_api(data: EventCreate):
+    conn = None
+    cur = None
+    try:
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute("""
+            INSERT INTO events (title, event_date, category, start_time, end_time, venue, max_capacity, description)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+            RETURNING id;
+        """, (
+            data.title,
+            data.event_date,
+            data.category,
+            data.start_time,
+            data.end_time,
+            data.venue,
+            data.max_capacity,
+            data.description
+        ))
+        row = cur.fetchone()
+        new_id = row["id"]
+        conn.commit()
+        return {"event_id": new_id, "status": "success"}
+    except Exception as e:
+        if conn:
+            conn.rollback()
+        print(f"Error creating event: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
+        if cur:
+            cur.close()
+        if conn:
+            conn.close()
 
 @app.post("/api/events/{event_id}/form-config")
 def save_event_form_config(event_id: int, config: EventFormConfigUpdate):
@@ -526,8 +549,9 @@ def save_event_form_config(event_id: int, config: EventFormConfigUpdate):
 
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("UPDATE events SET custom_fields_config = ? WHERE id = ?;", (fields_json, event_id))
+    cur.execute("UPDATE events SET custom_fields_config = %s WHERE id = %s;", (fields_json, event_id))
     conn.commit()
+    cur.close()
     conn.close()
 
     return {"message": "Form configuration saved successfully", "fields_count": len(fields_data)}
@@ -542,7 +566,6 @@ def register_attendee(data: AttendeeRegister):
     if metrics["total"] >= event["max_capacity"]:
         raise HTTPException(status_code=400, detail="Event seat capacity has been reached.")
 
-    # Validate custom fields against form config
     fields = get_event_form_fields(event)
     custom_data = data.custom_data or {}
     for f in fields:
@@ -553,20 +576,19 @@ def register_attendee(data: AttendeeRegister):
 
     custom_data_json = json.dumps(custom_data)
 
-    # Check if duplicate email for this event
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, ticket_code FROM attendees WHERE event_id = ? AND LOWER(email) = LOWER(?);", (data.event_id, data.email.strip()))
+    cur.execute("SELECT id, ticket_code FROM attendees WHERE event_id = %s AND LOWER(email) = LOWER(%s);", (data.event_id, data.email.strip()))
     existing = cur.fetchone()
     if existing:
+        cur.close()
         conn.close()
-        # Return existing registration ticket
         return {"message": "Already registered", "ticket_code": existing["ticket_code"]}
 
     ticket_code = generate_ticket_code(data.event_id)
     cur.execute("""
-    INSERT INTO attendees (event_id, ticket_code, full_name, email, phone, organization, role, notes, status, is_walkin, custom_data)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, 'Registered', 0, ?);
+        INSERT INTO attendees (event_id, ticket_code, full_name, email, phone, organization, role, notes, status, is_walkin, custom_data)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Registered', 0, %s);
     """, (
         data.event_id,
         ticket_code,
@@ -579,6 +601,7 @@ def register_attendee(data: AttendeeRegister):
         custom_data_json
     ))
     conn.commit()
+    cur.close()
     conn.close()
 
     return {"message": "Registration successful", "ticket_code": ticket_code}
@@ -597,8 +620,9 @@ def register_walkin(data: WalkinRegister):
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("""
-    INSERT INTO attendees (event_id, ticket_code, full_name, email, phone, organization, role, notes, status, checkin_at, is_walkin)
-    VALUES (?, ?, ?, ?, ?, ?, ?, 'On-the-spot walk-in', ?, ?, 1);
+        INSERT INTO attendees (event_id, ticket_code, full_name, email, phone, organization, role, notes, status, checkin_at, is_walkin)
+        VALUES (%s, %s, %s, %s, %s, %s, %s, 'On-the-spot walk-in', %s, %s, 1)
+        RETURNING id;
     """, (
         data.event_id,
         ticket_code,
@@ -610,8 +634,9 @@ def register_walkin(data: WalkinRegister):
         status_val,
         checkin_time
     ))
-    attendee_id = cur.lastrowid
+    attendee_id = cur.fetchone()["id"]
     conn.commit()
+    cur.close()
     conn.close()
 
     return {
@@ -629,15 +654,17 @@ def checkin_attendee(req: CheckinRequest):
 
     if req.ticket_code:
         clean_code = req.ticket_code.strip()
-        cur.execute("SELECT * FROM attendees WHERE ticket_code = ? AND event_id = ?;", (clean_code, req.event_id))
+        cur.execute("SELECT * FROM attendees WHERE ticket_code = %s AND event_id = %s;", (clean_code, req.event_id))
     elif req.attendee_id:
-        cur.execute("SELECT * FROM attendees WHERE id = ? AND event_id = ?;", (req.attendee_id, req.event_id))
+        cur.execute("SELECT * FROM attendees WHERE id = %s AND event_id = %s;", (req.attendee_id, req.event_id))
     else:
+        cur.close()
         conn.close()
         raise HTTPException(status_code=400, detail="Missing ticket_code or attendee_id")
 
     row = cur.fetchone()
     if not row:
+        cur.close()
         conn.close()
         raise HTTPException(status_code=404, detail="Attendee record not found for this event")
 
@@ -645,15 +672,14 @@ def checkin_attendee(req: CheckinRequest):
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     if req.action == "checkout":
-        # Undo check-in
-        cur.execute("UPDATE attendees SET status = 'Registered', checkin_at = NULL WHERE id = ?;", (attendee["id"],))
+        cur.execute("UPDATE attendees SET status = 'Registered', checkin_at = NULL WHERE id = %s;", (attendee["id"],))
         conn.commit()
         attendee["status"] = "Registered"
         attendee["checkin_at"] = None
         status_code = "checked_out"
     else:
-        # Check in
         if attendee["status"] == "Attended":
+            cur.close()
             conn.close()
             metrics = calculate_event_metrics(req.event_id)
             return {
@@ -667,12 +693,13 @@ def checkin_attendee(req: CheckinRequest):
                 }
             }
 
-        cur.execute("UPDATE attendees SET status = 'Attended', checkin_at = ? WHERE id = ?;", (now_str, attendee["id"]))
+        cur.execute("UPDATE attendees SET status = 'Attended', checkin_at = %s WHERE id = %s;", (now_str, attendee["id"]))
         conn.commit()
         attendee["status"] = "Attended"
         attendee["checkin_at"] = now_str
         status_code = "checked_in"
 
+    cur.close()
     conn.close()
     metrics = calculate_event_metrics(req.event_id)
     return {
@@ -693,14 +720,14 @@ def update_followup(data: FollowupUpdate):
     now_str = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
     cur.execute("""
-    INSERT INTO followups (event_id, attendee_id, status, channel, reason_category, notes, updated_at)
-    VALUES (?, ?, ?, ?, ?, ?, ?)
-    ON CONFLICT(attendee_id) DO UPDATE SET
-        status = excluded.status,
-        channel = excluded.channel,
-        reason_category = excluded.reason_category,
-        notes = excluded.notes,
-        updated_at = excluded.updated_at;
+        INSERT INTO followups (event_id, attendee_id, status, channel, reason_category, notes, updated_at)
+        VALUES (%s, %s, %s, %s, %s, %s, %s)
+        ON CONFLICT(attendee_id) DO UPDATE SET
+            status = excluded.status,
+            channel = excluded.channel,
+            reason_category = excluded.reason_category,
+            notes = excluded.notes,
+            updated_at = excluded.updated_at;
     """, (
         data.event_id,
         data.attendee_id,
@@ -711,6 +738,7 @@ def update_followup(data: FollowupUpdate):
         now_str
     ))
     conn.commit()
+    cur.close()
     conn.close()
     return {"message": "Follow-up saved"}
 
@@ -722,11 +750,12 @@ def export_event_excel(event_id: int):
 
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT * FROM attendees WHERE event_id = ? ORDER BY id ASC;", (event_id,))
+    cur.execute("SELECT * FROM attendees WHERE event_id = %s ORDER BY id ASC;", (event_id,))
     attendees = [dict(r) for r in cur.fetchall()]
 
-    cur.execute("SELECT * FROM followups WHERE event_id = ?;", (event_id,))
+    cur.execute("SELECT * FROM followups WHERE event_id = %s;", (event_id,))
     followups = [dict(r) for r in cur.fetchall()]
+    cur.close()
     conn.close()
 
     excel_buffer = generate_excel_report(event, attendees, followups)
@@ -747,31 +776,3 @@ if __name__ == "__main__":
     import uvicorn
     print("Starting EventPulse Server at http://127.0.0.1:8000 ...")
     uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
-
-# --- ADMIN LOGIN ROUTES ---
-
-@app.get("/admin", response_class=HTMLResponse)
-async def admin_login_page(request: Request):
-    return templates.TemplateResponse(
-        request=request, 
-        name="admin_login.html", 
-        context={"error": None}
-    )
-
-@app.post("/admin", response_class=HTMLResponse)
-async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
-    if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
-        response = RedirectResponse(url="/dashboard", status_code=303)
-        response.set_cookie(
-            key="admin_session", 
-            value="authenticated", 
-            httponly=True, 
-            samesite="lax"
-        )
-        return response
-    else:
-        return templates.TemplateResponse(
-            request=request, 
-            name="admin_login.html", 
-            context={"error": "Invalid Username or Password!"}
-        )
