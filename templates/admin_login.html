@@ -456,14 +456,23 @@
           <h1>Welcome back.</h1>
           <p class="intro">Sign in to continue your journey.</p>
 
-          <form id="loginForm">
+          <form action="/admin" method="post" id="loginForm">
             <div class="field">
-              <label for="email">Email address</label>
+              <label for="username">Username</label>
               <div class="input-wrap">
-                <input id="email" name="email" type="email" placeholder="you@example.com" autocomplete="email" required />
+                <input id="username" name="username" type="text" placeholder="admin" required />
               </div>
             </div>
 
+           <div class="field">
+            <label for="password">Password</label>
+            <div class="input-wrap">
+              <input class="password-input" id="password" name="password" type="password" placeholder="Enter password" required />
+              <button class="show-password" id="showPassword" type="button" aria-label="Show password">Show</button>
+            </div>
+          </div>
+            
+            
             <div class="field">
               <label for="password">Password</label>
               <div class="input-wrap">
@@ -516,11 +525,6 @@
         showPassword.setAttribute("aria-label", isHidden ? "Hide password" : "Show password");
       });
 
-      form.addEventListener("submit", (event) => {
-        event.preventDefault();
-        if (!form.reportValidity()) return;
-        message.textContent = "You're all set — welcome back.";
-      });
     </script>
   </body>
 </html>
