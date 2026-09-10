@@ -412,6 +412,32 @@ def report_page(request: Request, event_id: int):
         }
     )
 
+@app.post("/events/{event_id}/delete")
+async def delete_event(request: Request, event_id: int):
+    # അഡ്മിൻ ലോഗിൻ ചെയ്തിട്ടുണ്ടോ എന്ന് പരിശോധിക്കുന്നു
+    if request.cookies.get("admin_session") != "authenticated":
+        return RedirectResponse(url="/admin", status_code=303)
+    
+    conn = get_db_connection()
+    cur = conn.cursor()
+    try:
+        # ഇവന്റുമായി ബന്ധപ്പെട്ട ഫോം ഫീൽഡുകൾ, രജിസ്ട്രേഷനുകൾ എന്നിവ ഉണ്ടെങ്കിൽ ആദ്യം ഒഴിവാക്കുന്നു
+        cur.execute("DELETE FROM registrations WHERE event_id = %s;", (event_id,))
+        cur.execute("DELETE FROM form_fields WHERE event_id = %s;", (event_id,))
+        
+        # പ്രധാന ഇവന്റ് ഡിലീറ്റ് ചെയ്യുന്നു
+        cur.execute("DELETE FROM events WHERE id = %s;", (event_id,))
+        conn.commit()
+    except Exception as e:
+        conn.rollback()
+        print(f"Error deleting event: {e}")
+    finally:
+        cur.close()
+        conn.close()
+        
+    return RedirectResponse(url="/dashboard", status_code=303)
+
+
 # -------------------------------------------------------------
 # REST API ENDPOINTS
 # -------------------------------------------------------------
