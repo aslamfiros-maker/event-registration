@@ -28,6 +28,8 @@ app = FastAPI(title="Albirr Events - Event Operations Platform")
 ADMIN_USERNAME = "admin"
 ADMIN_PASSWORD = "admin"
 
+app.mount("/static", StaticFiles(directory="static"), name="static")
+
 # Templates
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
