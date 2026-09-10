@@ -86,16 +86,31 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
 # HTML PAGE ROUTES
 # -------------------------------------------------------------
 
+# 1. പ്രധാന ലിങ്കിൽ വരുമ്പോൾ (Root Route - ഒരു തവണ മാത്രം മതി)
 @app.get("/")
-async def home_redirect():
-    return RedirectResponse(url="/admin")
-
-
-@app.get("/")
-async def home_redirect(request: Request):
+async def root(request: Request):
     if request.cookies.get("admin_session") == "authenticated":
         return RedirectResponse(url="/dashboard", status_code=303)
     return RedirectResponse(url="/admin", status_code=303)
+
+
+# 2. അഡ്മിൻ ലോഗിൻ പേജ് കാണിക്കാൻ
+@app.get("/admin", response_class=HTMLResponse)
+async def admin_login_page(request: Request):
+    return templates.TemplateResponse(
+        request=request, 
+        name="admin_login.html", 
+        context={"error": None}
+    )
+
+
+# 3. ഡാഷ്‌ബോർഡ് പേജ് (ഡാറ്റാബേസ് കോഡ് ഇതിന്റെ ഉള്ളിൽ വരണം)
+@app.get("/dashboard", response_class=HTMLResponse)
+def index_page(request: Request):
+
+    if request.cookies.get("admin_session") != "authenticated":
+        return RedirectResponse(url="/admin", status_code=303)
+    
     conn = get_db_connection()
     cur = conn.cursor()
     cur.execute("SELECT * FROM events ORDER BY event_date DESC, id DESC;")
