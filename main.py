@@ -154,21 +154,7 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
 # AUTH & HTML PAGE ROUTES
 # -------------------------------------------------------------
 
-@app.get("/")
-async def root(request: Request):
-    if request.cookies.get("admin_session") == "authenticated":
-        return RedirectResponse(url="/dashboard", status_code=303)
-    return RedirectResponse(url="/admin", status_code=303)
-
-@app.get("/admin", response_class=HTMLResponse)
-async def admin_login_page(request: Request):
-    return templates.TemplateResponse(
-        request=request, 
-        name="admin_login.html", 
-        context={"error": None}
-    )
-
-@app.post("/admin", response_class=HTMLResponse)
+@app.post("/", response_class=HTMLResponse)
 async def admin_login_submit(request: Request, username: str = Form(...), password: str = Form(...)):
     if username == ADMIN_USERNAME and password == ADMIN_PASSWORD:
         response = RedirectResponse(url="/dashboard", status_code=303)
