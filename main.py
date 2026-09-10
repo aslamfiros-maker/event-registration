@@ -25,7 +25,7 @@ import sample_data
 os.makedirs(os.path.join(os.path.dirname(__file__), "static"), exist_ok=True)
 
 app = FastAPI(title="Albirr Events - Event Operations Platform")
-ADMIN_USERNAME = "admin"
+ADMIN_USERNAME = "schoolalbirr@gmail.com"
 ADMIN_PASSWORD = "admin"
 
 app.mount("/static", StaticFiles(directory="static"), name="static")
