@@ -26,7 +26,7 @@ os.makedirs(os.path.join(os.path.dirname(__file__), "static"), exist_ok=True)
 
 app = FastAPI(title="Albirr Events - Event Operations Platform")
 ADMIN_USERNAME = "admin"
-ADMIN_PASSWORD = "P@$$word123"
+ADMIN_PASSWORD = "admin"
 
 # Templates
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
