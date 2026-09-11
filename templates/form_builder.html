@@ -214,7 +214,32 @@
     const eventId = {{ event.id }};
     let formFields = {{ current_fields | tojson }};
 
+    // Mandatory core fields that must always exist and be required
+    const mandatoryFields = [
+        { id: "full_name", label: "Full Name", type: "text", required: true, enabled: true, is_standard: true, placeholder: "e.g. Jane Doe" },
+        { id: "email", label: "Email Address", type: "email", required: true, enabled: true, is_standard: true, placeholder: "name@example.com" },
+        { id: "phone", label: "Phone Number (WhatsApp)", type: "tel", required: true, enabled: true, is_standard: true, placeholder: "+1 555-0199 or 9876543210" }
+    ];
+
+    function isMandatoryField(id) {
+        return mandatoryFields.some(m => m.id === id);
+    }
+
+    function ensureMandatoryFields() {
+        mandatoryFields.forEach(mandField => {
+            const existingIndex = formFields.findIndex(f => f.id === mandField.id);
+            if (existingIndex === -1) {
+                formFields.unshift({ ...mandField });
+            } else {
+                formFields[existingIndex].required = true;
+                formFields[existingIndex].enabled = true;
+                formFields[existingIndex].is_standard = true;
+            }
+        });
+    }
+
     document.addEventListener('DOMContentLoaded', () => {
+        ensureMandatoryFields();
         renderFieldsEditor();
         renderLivePreview();
         lucide.createIcons();
@@ -289,6 +314,8 @@
     }
 
     function toggleStandardField(fieldId, prop) {
+        if (isMandatoryField(fieldId)) return;
+
         const field = formFields.find(f => f.id === fieldId);
         if (field) {
             field[prop] = !field[prop];
@@ -306,7 +333,7 @@
 
         // Standard fields HTML
         stdContainer.innerHTML = stdFields.map(f => {
-            const isMandatory = (f.id === 'full_name' || f.id === 'email');
+            const isMandatory = isMandatoryField(f.id);
             return `
                 <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 flex items-center justify-between gap-3 text-xs">
                     <div class="flex items-center space-x-2 min-w-0">
@@ -410,12 +437,7 @@
     }
 
     function applyPreset(type) {
-        // Keep core Name, Email, Phone
-        const base = [
-            { id: "full_name", label: "Full Name", type: "text", required: true, enabled: true, is_standard: true, placeholder: "e.g. Jane Doe" },
-            { id: "email", label: "Email Address", type: "email", required: true, enabled: true, is_standard: true, placeholder: "name@example.com" },
-            { id: "phone", label: "Phone Number (WhatsApp)", type: "tel", required: true, enabled: true, is_standard: true, placeholder: "+1 555-0199 or 9876543210" },
-        ];
+        const base = [...mandatoryFields];
 
         if (type === 'tech') {
             formFields = [
