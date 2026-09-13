@@ -579,6 +579,7 @@ def register_attendee(data: AttendeeRegister):
     if metrics["total"] >= event["max_capacity"]:
         raise HTTPException(status_code=400, detail="Event seat capacity has been reached.")
 
+    # 1. Validate custom required fields
     fields = get_event_form_fields(event)
     custom_data = data.custom_data or {}
     for f in fields:
@@ -589,36 +590,69 @@ def register_attendee(data: AttendeeRegister):
 
     custom_data_json = json.dumps(custom_data)
 
+    # 2. Safely extract and clean inputs (Prevents AttributeError if None)
+    clean_email = data.email.strip().lower() if data.email else ""
+    clean_phone = data.phone.strip() if data.phone else ""
+    clean_name = data.full_name.strip() if data.full_name else ""
+
     conn = get_db_connection()
     cur = conn.cursor()
-    cur.execute("SELECT id, ticket_code FROM attendees WHERE event_id = %s AND LOWER(email) = LOWER(%s);", (data.event_id, data.email.strip()))
-    existing = cur.fetchone()
-    if existing:
+
+    try:
+        # 3. Check for existing attendee by Email OR Phone
+        conditions = []
+        params = [data.event_id]
+
+        if clean_email:
+            conditions.append("LOWER(email) = %s")
+            params.append(clean_email)
+
+        if clean_phone:
+            conditions.append("phone = %s")
+            params.append(clean_phone)
+
+        if conditions:
+            query = f"SELECT id, ticket_code FROM attendees WHERE event_id = %s AND ({' OR '.join(conditions)});"
+            cur.execute(query, tuple(params))
+            existing = cur.fetchone()
+
+            if existing:
+                # Direct match found: return the existing ticket
+                return {
+                    "message": "Already registered", 
+                    "ticket_code": existing["ticket_code"],
+                    "is_existing": True
+                }
+
+        # 4. If not found, insert new registration into database
+        ticket_code = generate_ticket_code(data.event_id)
+        cur.execute("""
+            INSERT INTO attendees (
+                event_id, ticket_code, full_name, email, phone, 
+                organization, role, notes, status, is_walkin, custom_data
+            )
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Registered', 0, %s);
+        """, (
+            data.event_id,
+            ticket_code,
+            clean_name,
+            clean_email,
+            clean_phone,
+            data.organization.strip() if data.organization else "",
+            data.role.strip() if data.role else "",
+            data.notes.strip() if data.notes else "",
+            custom_data_json
+        ))
+        conn.commit()
+        return {"message": "Registration successful", "ticket_code": ticket_code, "is_existing": False}
+
+    except Exception as e:
+        conn.rollback()
+        print(f"Registration Error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+    finally:
         cur.close()
         conn.close()
-        return {"message": "Already registered", "ticket_code": existing["ticket_code"]}
-
-    ticket_code = generate_ticket_code(data.event_id)
-    cur.execute("""
-        INSERT INTO attendees (event_id, ticket_code, full_name, email, phone, organization, role, notes, status, is_walkin, custom_data)
-        VALUES (%s, %s, %s, %s, %s, %s, %s, %s, 'Registered', 0, %s);
-    """, (
-        data.event_id,
-        ticket_code,
-        data.full_name.strip(),
-        data.email.strip().lower(),
-        data.phone.strip() if data.phone else "",
-        data.organization.strip() if data.organization else "",
-        data.role.strip() if data.role else "",
-        data.notes.strip() if data.notes else "",
-        custom_data_json
-    ))
-    conn.commit()
-    cur.close()
-    conn.close()
-
-    return {"message": "Registration successful", "ticket_code": ticket_code}
-
 @app.post("/api/walkin")
 def register_walkin(data: WalkinRegister):
     event = get_event_by_id(data.event_id)
