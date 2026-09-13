@@ -25,8 +25,9 @@
     </div>
 
     <!-- Quick Stat Cards -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-        <div class="bg-[#121215] border border-zinc-800 rounded-3xl p-5 sm:p-6 flex items-center justify-between shadow-xl shadow-black/40 relative overflow-hidden group hover:border-amber-500/40 transition">
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+    <!-- Card 1: Total Events -->
+    <div class="bg-[#121215] border border-zinc-800 rounded-3xl p-5 sm:p-6 flex items-center justify-between shadow-xl shadow-black/40 relative overflow-hidden group hover:border-amber-500/40 transition">
         <div class="space-y-1">
             <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">Total Events</span>
             <span class="text-3xl font-extrabold text-white tracking-tight">{{ events|length }}</span>
@@ -35,41 +36,40 @@
             <i data-lucide="calendar" class="w-5 h-5"></i>
         </div>
     </div>
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Events</span>
-                <p class="text-2xl font-black text-slate-900">{{ events|length }}</p>
-            </div>
-        </div>
 
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-blue-50 text-blue-600 flex items-center justify-center shrink-0">
-                <i data-lucide="users" class="w-6 h-6"></i>
-            </div>
-            <div>
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Pre-Registrations</span>
-                <p class="text-2xl font-black text-slate-900">{{ total_registered }}</p>
-            </div>
+    <!-- Card 2: Total Registrations -->
+    <div class="bg-[#121215] border border-zinc-800 rounded-3xl p-5 sm:p-6 flex items-center justify-between shadow-xl shadow-black/40 relative overflow-hidden group hover:border-amber-500/40 transition">
+        <div class="space-y-1">
+            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">Total Pre-Registrations</span>
+            <span class="text-3xl font-extrabold text-white tracking-tight">{{ total_registered }}</span>
         </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 text-emerald-600 flex items-center justify-center shrink-0">
-                <i data-lucide="user-check" class="w-6 h-6"></i>
-            </div>
-            <div>
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Checked In</span>
-                <p class="text-2xl font-black text-emerald-600">{{ total_attended }}</p>
-            </div>
-        </div>
-
-        <div class="bg-white p-5 rounded-2xl border border-slate-200/80 shadow-sm flex items-center space-x-4">
-            <div class="w-12 h-12 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center shrink-0">
-                <i data-lucide="user-x" class="w-6 h-6"></i>
-            </div>
-            <div>
-                <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">No-Shows to Follow Up</span>
-                <p class="text-2xl font-black text-amber-600">{{ total_absent }}</p>
-            </div>
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <i data-lucide="users" class="w-5 h-5"></i>
         </div>
     </div>
+
+    <!-- Card 3: Total Checked In -->
+    <div class="bg-[#121215] border border-zinc-800 rounded-3xl p-5 sm:p-6 flex items-center justify-between shadow-xl shadow-black/40 relative overflow-hidden group hover:border-emerald-500/40 transition">
+        <div class="space-y-1">
+            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">Total Checked In</span>
+            <span class="text-3xl font-extrabold text-emerald-400 tracking-tight">{{ total_attended }}</span>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 flex items-center justify-center shrink-0">
+            <i data-lucide="user-check" class="w-5 h-5"></i>
+        </div>
+    </div>
+
+    <!-- Card 4: No-Shows To Follow Up -->
+    <div class="bg-[#121215] border border-zinc-800 rounded-3xl p-5 sm:p-6 flex items-center justify-between shadow-xl shadow-black/40 relative overflow-hidden group hover:border-amber-500/40 transition">
+        <div class="space-y-1">
+            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider block">No-Shows To Follow Up</span>
+            <span class="text-3xl font-extrabold text-amber-400 tracking-tight">{{ total_absent }}</span>
+        </div>
+        <div class="w-12 h-12 rounded-2xl bg-amber-500/10 border border-amber-500/20 text-amber-400 flex items-center justify-center shrink-0">
+            <i data-lucide="user-x" class="w-5 h-5"></i>
+        </div>
+    </div>
+</div>
 
     <!-- Events List Section -->
     <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
