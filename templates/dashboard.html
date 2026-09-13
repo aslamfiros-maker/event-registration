@@ -87,103 +87,113 @@
             </div>
         </div>
 
-        <!-- Events Container -->
-        <div class="divide-y divide-zinc-800/60" id="events-container">
-            {% for ev in events %}
-            <div class="p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6 hover:bg-[#18181b]/50 transition event-card" data-title="{{ ev.title | lower }}" data-category="{{ (ev.category or '') | lower }}">
-                <!-- Event Info Left -->
-                <div class="flex items-start sm:items-center space-x-4">
-                    <!-- Date Badge -->
-                    <div class="w-14 h-14 rounded-2xl bg-[#18181b] border border-zinc-800 flex flex-col items-center justify-center shrink-0 shadow-inner">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">{{ (ev.event_date|string)[5:7] }}</span>
-                        <span class="text-lg font-extrabold text-white leading-tight">{{ (ev.event_date|string)[8:10] }}</span>
-                        <span class="text-[9px] text-zinc-500 font-medium">{{ (ev.event_date|string)[:4] }}</span>
+<!-- Events Container -->
+    <div class="divide-y divide-zinc-800/60" id="events-container">
+        {% for ev in events %}
+        <div class="p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6 hover:bg-[#18181b]/50 transition event-card" data-title="{{ ev.title | lower }}" data-category="{{ (ev.category or '') | lower }}">
+            
+            <!-- Event Info Left (Now Clickable) -->
+            <a href="/events/{{ ev.id }}" class="flex items-start sm:items-center space-x-4 group cursor-pointer flex-1">
+                <!-- Date Badge -->
+                <div class="w-14 h-14 rounded-2xl bg-[#18181b] border border-zinc-800 flex flex-col items-center justify-center shrink-0 shadow-inner group-hover:border-amber-500/50 transition">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">{{ (ev.event_date|string)[5:7] }}</span>
+                    <span class="text-lg font-extrabold text-white leading-tight">{{ (ev.event_date|string)[8:10] }}</span>
+                    <span class="text-[9px] text-zinc-500 font-medium">{{ (ev.event_date|string)[:4] }}</span>
+                </div>
+
+                <div class="space-y-1.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Clickable Title -->
+                        <h3 class="text-base font-bold text-white tracking-tight uppercase group-hover:text-amber-400 transition flex items-center gap-1.5">
+                            <span>{{ ev.title }}</span>
+                            <i data-lucide="arrow-up-right" class="w-4 h-4 opacity-0 group-hover:opacity-100 transition text-amber-400"></i>
+                        </h3>
+                        <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                            {{ ev.category or 'Social Event' }}
+                        </span>
                     </div>
-
-                    <div class="space-y-1.5">
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="text-base font-bold text-white tracking-tight uppercase">{{ ev.title }}</h3>
-                            <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
-                                {{ ev.category or 'Social Event' }}
-                            </span>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400 font-medium">
-                            <span class="flex items-center">
-                                <i data-lucide="clock" class="w-3.5 h-3.5 mr-1 text-zinc-500"></i>
-                                {{ ev.start_time or '00:00' }} - {{ ev.end_time or '00:00' }}
-                            </span>
-                            <span class="flex items-center">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5 mr-1 text-zinc-500"></i>
-                                {{ ev.venue or 'TBD' }}
-                            </span>
-                            <span class="flex items-center text-zinc-300">
-                                <i data-lucide="users" class="w-3.5 h-3.5 mr-1 text-amber-400"></i>
-                                {{ ev.registered_count }}/{{ ev.max_capacity }} Registered
-                            </span>
-                        </div>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400 font-medium">
+                        <span class="flex items-center">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 mr-1 text-zinc-500"></i>
+                            {{ ev.start_time or '00:00' }} - {{ ev.end_time or '00:00' }}
+                        </span>
+                        <span class="flex items-center">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 mr-1 text-zinc-500"></i>
+                            {{ ev.venue or 'TBD' }}
+                        </span>
+                        <span class="flex items-center text-zinc-300">
+                            <i data-lucide="users" class="w-3.5 h-3.5 mr-1 text-amber-400"></i>
+                            {{ ev.registered_count }}/{{ ev.max_capacity }} Registered
+                        </span>
                     </div>
                 </div>
+            </a>
 
-                <!-- Action Hub Right -->
-                <div class="flex flex-wrap items-center gap-2 pt-2 xl:pt-0">
-                    <button onclick="copyRegLink('{{ ev.id }}')" title="Copy Link" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 transition flex items-center space-x-1.5 border border-zinc-700/60">
-                        <i data-lucide="link" class="w-3.5 h-3.5 text-zinc-400"></i>
-                        <span>Copy Link</span>
+            <!-- Action Hub Right -->
+            <div class="flex flex-wrap items-center gap-2 pt-2 xl:pt-0 shrink-0">
+                <!-- Direct Overview Button -->
+                <a href="/events/{{ ev.id }}" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 border border-amber-500/30 transition flex items-center space-x-1.5">
+                    <i data-lucide="layout-dashboard" class="w-3.5 h-3.5"></i>
+                    <span>Manage</span>
+                </a>
+
+                <button onclick="copyRegLink('{{ ev.id }}')" title="Copy Link" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-800 text-zinc-300 hover:text-white hover:bg-zinc-700 transition flex items-center space-x-1.5 border border-zinc-700/60">
+                    <i data-lucide="link" class="w-3.5 h-3.5 text-zinc-400"></i>
+                    <span>Copy Link</span>
+                </button>
+
+                <a href="/events/{{ ev.id }}/register" target="_blank" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-zinc-900 text-zinc-300 hover:bg-zinc-800 border border-zinc-700 transition flex items-center space-x-1.5">
+                    <i data-lucide="user-plus" class="w-3.5 h-3.5 text-zinc-400"></i>
+                    <span>Register Page</span>
+                </a>
+
+                <a href="/events/{{ ev.id }}/checkin" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 shadow-sm shadow-emerald-500/20 transition flex items-center space-x-1.5">
+                    <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
+                    <span>Attendance Kiosk</span>
+                </a>
+
+                <a href="/events/{{ ev.id }}/followup" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#18181b] text-amber-400 hover:bg-zinc-800 border border-amber-500/30 transition flex items-center space-x-1.5">
+                    <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
+                    <span>Follow-Up ({{ ev.absent_count }})</span>
+                </a>
+
+                <a href="/events/{{ ev.id }}/report" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 border border-purple-500/30 transition flex items-center space-x-1.5">
+                    <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
+                    <span>Final Report</span>
+                </a>
+
+                <form action="/events/{{ ev.id }}/delete" method="post" onsubmit="return confirm('Are you sure you want to delete this event? All attendee records will be permanently removed.');" class="inline-block">
+                    <button type="submit" class="px-3.5 py-2 text-xs font-semibold rounded-xl text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition flex items-center space-x-1.5">
+                        <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
+                        <span>Delete</span>
                     </button>
-
-                    <a href="/events/{{ ev.id }}/register" target="_blank" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-amber-500/10 text-amber-300 hover:bg-amber-500/20 border border-amber-500/30 transition flex items-center space-x-1.5">
-                        <i data-lucide="user-plus" class="w-3.5 h-3.5"></i>
-                        <span>Register Page</span>
-                    </a>
-
-                    <a href="/events/{{ ev.id }}/checkin" class="px-3.5 py-2 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 shadow-sm shadow-emerald-500/20 transition flex items-center space-x-1.5">
-                        <i data-lucide="scan-line" class="w-3.5 h-3.5"></i>
-                        <span>Attendance Kiosk</span>
-                    </a>
-
-                    <a href="/events/{{ ev.id }}/followup" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-[#18181b] text-amber-400 hover:bg-zinc-800 border border-amber-500/30 transition flex items-center space-x-1.5">
-                        <i data-lucide="user-x" class="w-3.5 h-3.5"></i>
-                        <span>Follow-Up ({{ ev.absent_count }})</span>
-                    </a>
-
-                    <a href="/events/{{ ev.id }}/report" class="px-3.5 py-2 text-xs font-semibold rounded-xl bg-purple-500/10 text-purple-300 hover:bg-purple-500/20 border border-purple-500/30 transition flex items-center space-x-1.5">
-                        <i data-lucide="bar-chart-3" class="w-3.5 h-3.5"></i>
-                        <span>Final Report</span>
-                    </a>
-
-                    <form action="/events/{{ ev.id }}/delete" method="post" onsubmit="return confirm('Are you sure you want to delete this event? All attendee records will be permanently removed.');" class="inline-block">
-                        <button type="submit" class="px-3.5 py-2 text-xs font-semibold rounded-xl text-rose-400 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/20 transition flex items-center space-x-1.5">
-                            <i data-lucide="trash-2" class="w-3.5 h-3.5"></i>
-                            <span>Delete</span>
-                        </button>
-                    </form>
-                </div>
+                </form>
             </div>
-            {% endfor %}
-
-            {% if not events %}
-            <div class="p-12 text-center text-zinc-500">
-                <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 text-amber-400 flex items-center justify-center mx-auto mb-4">
-                    <i data-lucide="calendar-x" class="w-8 h-8"></i>
-                </div>
-                <h3 class="text-base font-bold text-white">No events found</h3>
-                <p class="text-sm text-zinc-400 mt-1 max-w-sm mx-auto">Get started by creating your first event to take pre-registrations and manage attendance.</p>
-                <div class="mt-5 flex justify-center gap-3">
-                    <button onclick="openCreateModal()" class="px-5 py-2.5 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-zinc-950 font-bold text-sm shadow-md shadow-amber-500/20 transition flex items-center space-x-2">
-                        <i data-lucide="plus" class="w-4 h-4"></i>
-                        <span>Create Your First Event</span>
-                    </button>
-                    <button onclick="loadSampleData()" class="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-sm transition flex items-center space-x-2 border border-zinc-700">
-                        <i data-lucide="database" class="w-4 h-4"></i>
-                        <span>Load Demo Sample Data</span>
-                    </button>
-                </div>
-            </div>
-            {% endif %}
         </div>
-    </div>
-</div>
+        {% endfor %}
 
+        {% if not events %}
+        <div class="p-12 text-center text-zinc-500">
+            <div class="w-16 h-16 rounded-2xl bg-zinc-900 border border-zinc-800 text-amber-400 flex items-center justify-center mx-auto mb-4">
+                <i data-lucide="calendar-x" class="w-8 h-8"></i>
+            </div>
+            <h3 class="text-base font-bold text-white">No events found</h3>
+            <p class="text-sm text-zinc-400 mt-1 max-w-sm mx-auto">Get started by creating your first event to take pre-registrations and manage attendance.</p>
+            <div class="mt-5 flex justify-center gap-3">
+                <button onclick="openCreateModal()" class="px-5 py-2.5 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-zinc-950 font-bold text-sm shadow-md shadow-amber-500/20 transition flex items-center space-x-2">
+                    <i data-lucide="plus" class="w-4 h-4"></i>
+                    <span>Create Your First Event</span>
+                </button>
+                <button onclick="loadSampleData()" class="px-5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-bold text-sm transition flex items-center space-x-2 border border-zinc-700">
+                    <i data-lucide="database" class="w-4 h-4"></i>
+                    <span>Load Demo Sample Data</span>
+                </button>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+        
 <script>
     function copyRegLink(eventId) {
         const url = `${window.location.origin}/events/${eventId}/register`;
