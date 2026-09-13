@@ -10,24 +10,24 @@
 {% block content %}
 <div class="space-y-6">
     <!-- Top Kiosk Header -->
-    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+    <div class="bg-[#121215] rounded-3xl border border-zinc-800 shadow-xl shadow-black/40 p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
         <div>
             <div class="flex items-center space-x-2 mb-1">
                 <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span class="text-xs font-bold uppercase tracking-wider text-emerald-600">Live Kiosk Station Active</span>
+                <span class="text-xs font-bold uppercase tracking-wider text-emerald-400">Live Kiosk Station Active</span>
             </div>
-            <h1 class="text-xl sm:text-2xl font-extrabold text-slate-900">{{ event.title }} - Attendance Check-In</h1>
-            <p class="text-xs text-slate-500 mt-0.5">Scan attendee QR passes or search names for rapid entry marking</p>
+            <h1 class="text-xl sm:text-2xl font-black tracking-tight text-white uppercase">{{ event.title }} - Attendance Check-In</h1>
+            <p class="text-xs text-zinc-400 mt-0.5">Scan attendee QR passes or search names for rapid entry marking</p>
         </div>
 
         <!-- Quick Walk-in Button -->
         <div class="flex items-center space-x-3">
-            <button onclick="openWalkinModal()" class="px-4 py-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 text-xs sm:text-sm font-bold shadow-md transition flex items-center space-x-2">
-                <i data-lucide="user-plus" class="w-4 h-4 text-emerald-400"></i>
+            <button onclick="openWalkinModal()" class="px-4 py-2.5 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-zinc-950 text-xs sm:text-sm font-bold shadow-md shadow-amber-500/20 transition flex items-center space-x-2">
+                <i data-lucide="user-plus" class="w-4 h-4 text-zinc-950 font-black"></i>
                 <span>+ On-Spot Walk-in</span>
             </button>
-            <a href="/events/{{ event.id }}" class="px-3.5 py-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs sm:text-sm font-semibold transition flex items-center space-x-1.5">
-                <i data-lucide="arrow-left" class="w-4 h-4"></i>
+            <a href="/events/{{ event.id }}" class="px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/60 text-xs sm:text-sm font-semibold transition flex items-center space-x-1.5">
+                <i data-lucide="arrow-left" class="w-4 h-4 text-zinc-400"></i>
                 <span>Exit Kiosk</span>
             </a>
         </div>
@@ -35,21 +35,21 @@
 
     <!-- Live Attendance Metrics Counter Bar -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="kpi-bar">
-        <div class="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/80 shadow-sm">
-            <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Total Registered</span>
-            <p class="text-2xl font-black text-slate-900 mt-1" id="kpi-total">{{ total_count }}</p>
+        <div class="bg-[#121215] p-4 sm:p-5 rounded-3xl border border-zinc-800 shadow-xl shadow-black/40">
+            <span class="text-[11px] font-bold text-zinc-400 uppercase tracking-wider">Total Registered</span>
+            <p class="text-2xl sm:text-3xl font-black text-white mt-1" id="kpi-total">{{ total_count }}</p>
         </div>
-        <div class="bg-emerald-50/70 p-4 sm:p-5 rounded-2xl border border-emerald-200 shadow-sm">
-            <span class="text-[11px] font-bold text-emerald-700 uppercase tracking-wider">Checked In (Present)</span>
-            <p class="text-2xl font-black text-emerald-700 mt-1" id="kpi-attended">{{ attended_count }}</p>
+        <div class="bg-[#121215] p-4 sm:p-5 rounded-3xl border border-zinc-800 shadow-xl shadow-black/40">
+            <span class="text-[11px] font-bold text-emerald-400 uppercase tracking-wider">Checked In (Present)</span>
+            <p class="text-2xl sm:text-3xl font-black text-emerald-400 mt-1" id="kpi-attended">{{ attended_count }}</p>
         </div>
-        <div class="bg-amber-50/70 p-4 sm:p-5 rounded-2xl border border-amber-200 shadow-sm">
-            <span class="text-[11px] font-bold text-amber-700 uppercase tracking-wider">Remaining (Pending)</span>
-            <p class="text-2xl font-black text-amber-700 mt-1" id="kpi-absent">{{ absent_count }}</p>
+        <div class="bg-[#121215] p-4 sm:p-5 rounded-3xl border border-zinc-800 shadow-xl shadow-black/40">
+            <span class="text-[11px] font-bold text-amber-400 uppercase tracking-wider">Remaining (Pending)</span>
+            <p class="text-2xl sm:text-3xl font-black text-amber-400 mt-1" id="kpi-absent">{{ absent_count }}</p>
         </div>
-        <div class="bg-brand-50/70 p-4 sm:p-5 rounded-2xl border border-brand-200 shadow-sm">
-            <span class="text-[11px] font-bold text-brand-700 uppercase tracking-wider">Turnout Rate</span>
-            <p class="text-2xl font-black text-brand-700 mt-1" id="kpi-rate">{{ attendance_rate }}%</p>
+        <div class="bg-[#121215] p-4 sm:p-5 rounded-3xl border border-zinc-800 shadow-xl shadow-black/40">
+            <span class="text-[11px] font-bold text-amber-300 uppercase tracking-wider">Turnout Rate</span>
+            <p class="text-2xl sm:text-3xl font-black text-amber-300 mt-1" id="kpi-rate">{{ attendance_rate }}%</p>
         </div>
     </div>
 
@@ -57,37 +57,37 @@
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
         
         <!-- Left: Interactive QR Scanner Box (5 Cols) -->
-        <div class="lg:col-span-5 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 space-y-4">
-            <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+        <div class="lg:col-span-5 bg-[#121215] rounded-3xl border border-zinc-800 shadow-xl shadow-black/40 p-5 sm:p-6 space-y-4">
+            <div class="flex items-center justify-between pb-3 border-b border-zinc-800/80">
                 <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
                         <i data-lucide="camera" class="w-4 h-4"></i>
                     </div>
-                    <h2 class="text-sm font-bold text-slate-900">Live Camera QR Scanner</h2>
+                    <h2 class="text-sm font-bold text-white">Live Camera QR Scanner</h2>
                 </div>
                 <div class="flex items-center space-x-2">
-                    <button id="toggle-camera-btn" onclick="toggleScanner()" class="px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition">
+                    <button id="toggle-camera-btn" onclick="toggleScanner()" class="px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 shadow-sm shadow-emerald-500/20 transition">
                         Start Scanner
                     </button>
                 </div>
             </div>
 
             <!-- Video Viewport -->
-            <div class="relative bg-slate-900 rounded-2xl overflow-hidden aspect-square flex flex-col items-center justify-center text-center p-4">
+            <div class="relative bg-[#09090b] border border-zinc-800 rounded-2xl overflow-hidden aspect-square flex flex-col items-center justify-center text-center p-4">
                 <div id="qr-reader" class="w-full h-full"></div>
                 <div id="scanner-placeholder" class="space-y-3">
-                    <div class="w-16 h-16 rounded-2xl bg-white/10 text-white flex items-center justify-center mx-auto animate-pulse">
+                    <div class="w-16 h-16 rounded-2xl bg-zinc-800/80 border border-zinc-700/60 text-amber-400 flex items-center justify-center mx-auto animate-pulse">
                         <i data-lucide="qr-code" class="w-8 h-8"></i>
                     </div>
                     <div>
                         <p class="text-xs font-bold text-white">Camera is currently stopped</p>
-                        <p class="text-[11px] text-slate-400 mt-0.5">Click 'Start Scanner' to use your webcam or phone camera</p>
+                        <p class="text-[11px] text-zinc-400 mt-0.5">Click 'Start Scanner' to use your webcam or phone camera</p>
                     </div>
                 </div>
 
                 <!-- Live Target Reticle Overlay (shows when running) -->
-                <div id="reticle-box" class="hidden pointer-events-none absolute inset-8 border-2 border-emerald-400/80 rounded-2xl flex items-center justify-center">
-                    <div class="w-full h-0.5 bg-emerald-400/60 shadow-lg shadow-emerald-400 animate-pulse"></div>
+                <div id="reticle-box" class="hidden pointer-events-none absolute inset-8 border-2 border-amber-400/80 rounded-2xl flex items-center justify-center">
+                    <div class="w-full h-0.5 bg-amber-400/80 shadow-lg shadow-amber-400 animate-pulse"></div>
                 </div>
             </div>
 
@@ -98,21 +98,21 @@
                     <div class="flex-1 min-w-0">
                         <div class="flex items-center justify-between">
                             <span id="scan-badge" class="px-2 py-0.5 text-[10px] font-bold rounded uppercase"></span>
-                            <span id="scan-time" class="text-[10px] font-mono text-slate-400"></span>
+                            <span id="scan-time" class="text-[10px] font-mono text-zinc-400"></span>
                         </div>
-                        <h4 id="scan-name" class="text-sm font-extrabold text-slate-900 truncate mt-1"></h4>
-                        <p id="scan-org" class="text-xs text-slate-500 truncate"></p>
-                        <p id="scan-ticket" class="text-xs font-mono font-semibold text-slate-700 mt-1"></p>
+                        <h4 id="scan-name" class="text-sm font-extrabold text-white truncate mt-1"></h4>
+                        <p id="scan-org" class="text-xs text-zinc-400 truncate"></p>
+                        <p id="scan-ticket" class="text-xs font-mono font-bold text-amber-400 mt-1"></p>
                     </div>
                 </div>
             </div>
 
             <!-- Manual Quick Passcode Input -->
             <form onsubmit="handleManualCodeSubmit(event)" class="pt-2">
-                <label class="block text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Or Enter Pass Code Manually</label>
+                <label class="block text-[11px] font-bold uppercase tracking-wider text-zinc-400 mb-1.5">Or Enter Pass Code Manually</label>
                 <div class="flex space-x-2">
-                    <input type="text" id="manual-ticket-input" placeholder="e.g. REG-E1-AB12CD" class="flex-1 px-3.5 py-2 text-xs sm:text-sm font-mono bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 uppercase">
-                    <button type="submit" class="px-4 py-2 text-xs font-bold rounded-xl bg-slate-900 text-white hover:bg-slate-800 transition">
+                    <input type="text" id="manual-ticket-input" placeholder="e.g. REG-E1-AB12CD" class="flex-1 px-3.5 py-2 text-xs sm:text-sm font-mono bg-[#18181b] border border-zinc-800 text-zinc-100 placeholder-zinc-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 uppercase">
+                    <button type="submit" class="px-4 py-2 text-xs font-bold rounded-xl bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700/60 transition">
                         Submit
                     </button>
                 </div>
@@ -120,60 +120,62 @@
         </div>
 
         <!-- Right: Fast Search & Attendee Check-In Roster (7 Cols) -->
-        <div class="lg:col-span-7 bg-white rounded-3xl border border-slate-200/80 shadow-sm p-5 sm:p-6 space-y-4">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-slate-100">
+        <div class="lg:col-span-7 bg-[#121215] rounded-3xl border border-zinc-800 shadow-xl shadow-black/40 p-5 sm:p-6 space-y-4">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
                 <div class="flex items-center space-x-2">
-                    <div class="w-8 h-8 rounded-lg bg-brand-50 text-brand-600 flex items-center justify-center">
+                    <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
                         <i data-lucide="search" class="w-4 h-4"></i>
                     </div>
-                    <h2 class="text-sm font-bold text-slate-900">Fast Name / Email Search</h2>
+                    <h2 class="text-sm font-bold text-white">Fast Search Roster</h2>
                 </div>
                 <!-- Status Filter Tabs -->
-                <div class="flex space-x-1 bg-slate-100 p-1 rounded-xl text-xs">
-                    <button onclick="setFilter('all')" id="btn-tab-all" class="px-2.5 py-1 rounded-lg font-bold bg-white text-slate-900 shadow-xs">All ({{ attendees|length }})</button>
-                    <button onclick="setFilter('absent')" id="btn-tab-absent" class="px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:text-slate-900">Pending ({{ absent_count }})</button>
-                    <button onclick="setFilter('attended')" id="btn-tab-attended" class="px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:text-slate-900">Checked In ({{ attended_count }})</button>
+                <div class="flex space-x-1 bg-[#18181b] p-1 rounded-xl text-xs border border-zinc-800">
+                    <button onclick="setFilter('all')" id="btn-tab-all" class="px-2.5 py-1 rounded-lg font-bold bg-[#fbbf24] text-zinc-950 shadow-xs">All ({{ attendees|length }})</button>
+                    <button onclick="setFilter('absent')" id="btn-tab-absent" class="px-2.5 py-1 rounded-lg font-medium text-zinc-400 hover:text-white">Pending ({{ absent_count }})</button>
+                    <button onclick="setFilter('attended')" id="btn-tab-attended" class="px-2.5 py-1 rounded-lg font-medium text-zinc-400 hover:text-white">Checked In ({{ attended_count }})</button>
                 </div>
             </div>
 
             <!-- Instant Search Input -->
             <div class="relative">
-                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-400"></i>
-                <input type="text" id="kiosk-search" oninput="filterKioskList()" placeholder="Type name, email, or pass code to filter instantly..." class="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+                <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-3.5 text-zinc-500"></i>
+                <input type="text" id="kiosk-search" oninput="filterKioskList()" placeholder="Type name, email, or pass code to filter instantly..." class="w-full pl-10 pr-4 py-2.5 text-xs sm:text-sm bg-[#18181b] border border-zinc-800 text-zinc-100 placeholder-zinc-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition">
             </div>
 
             <!-- Attendee List Container -->
-            <div class="overflow-y-auto max-h-[520px] divide-y divide-slate-100 border border-slate-100 rounded-2xl" id="kiosk-attendees-list">
+            <div class="overflow-y-auto max-h-[520px] divide-y divide-zinc-800/60 border border-zinc-800/80 rounded-2xl bg-[#0e0e11]" id="kiosk-attendees-list">
                 {% for a in attendees %}
-                <div class="p-3.5 sm:p-4 hover:bg-slate-50/80 transition flex items-center justify-between gap-3 kiosk-row" 
+                <div class="p-3.5 sm:p-4 hover:bg-[#18181b]/50 transition flex items-center justify-between gap-3 kiosk-row" 
                      id="row-{{ a.id }}"
                      data-id="{{ a.id }}"
                      data-ticket="{{ a.ticket_code }}"
                      data-status="{{ a.status }}"
                      data-name="{{ a.full_name|lower }}" 
-                     data-email="{{ a.email|lower }}" 
-                     data-org="{{ a.organization|lower or '' }}">
+                     data-email="{{ a.email|lower if a.email else '' }}" 
+                     data-org="{{ a.organization|lower if a.organization else '' }}">
                     
                     <div class="min-w-0 flex-1">
                         <div class="flex items-center space-x-2">
-                            <span class="font-bold text-slate-900 text-xs sm:text-sm truncate">{{ a.full_name }}</span>
+                            <span class="font-bold text-white text-xs sm:text-sm truncate">{{ a.full_name }}</span>
                             {% if a.is_walkin %}
-                            <span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-indigo-50 text-indigo-700">Walk-in</span>
+                            <span class="px-1.5 py-0.5 text-[9px] font-bold rounded bg-amber-500/10 text-amber-300 border border-amber-500/20">Walk-in</span>
                             {% endif %}
-                            <span class="status-badge px-2 py-0.5 text-[10px] font-bold rounded-full {% if a.status == 'Attended' %}bg-emerald-50 text-emerald-700 border border-emerald-200{% else %}bg-slate-100 text-slate-600{% endif %}">
+                            <span class="status-badge px-2 py-0.5 text-[10px] font-bold rounded-full {% if a.status == 'Attended' %}bg-emerald-500/10 text-emerald-400 border border-emerald-500/30{% else %}bg-zinc-800 text-zinc-400 border border-zinc-700{% endif %}">
                                 {{ a.status }}
                             </span>
                         </div>
-                        <div class="flex flex-wrap items-center gap-x-3 text-[11px] text-slate-500 mt-0.5">
-                            <span class="font-mono text-brand-600">{{ a.ticket_code }}</span>
+                        <div class="flex flex-wrap items-center gap-x-3 text-[11px] text-zinc-400 mt-0.5">
+                            <span class="font-mono text-amber-400 font-semibold">{{ a.ticket_code }}</span>
+                            {% if a.email %}
                             <span>&bull;</span>
                             <span class="truncate">{{ a.email }}</span>
+                            {% endif %}
                             {% if a.organization %}
                             <span>&bull;</span>
                             <span class="truncate">{{ a.organization }}</span>
                             {% endif %}
                         </div>
-                        <div class="checkin-time text-[10px] font-mono text-slate-400 mt-0.5">
+                        <div class="checkin-time text-[10px] font-mono text-zinc-500 mt-0.5">
                             {% if a.checkin_at %}Checked in at: {{ a.checkin_at }}{% endif %}
                         </div>
                     </div>
@@ -181,11 +183,11 @@
                     <!-- Action Toggle Button -->
                     <div class="shrink-0">
                         {% if a.status == 'Attended' %}
-                        <button onclick="toggleCheckin('{{ a.id }}', 'checkout')" class="action-btn px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition">
+                        <button onclick="toggleCheckin('{{ a.id }}', 'checkout')" class="action-btn px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-800 text-zinc-400 hover:bg-rose-500/10 hover:text-rose-400 border border-zinc-700/60 transition">
                             Undo
                         </button>
                         {% else %}
-                        <button onclick="toggleCheckin('{{ a.id }}', 'checkin')" class="action-btn px-4 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-600/20 transition flex items-center space-x-1">
+                        <button onclick="toggleCheckin('{{ a.id }}', 'checkin')" class="action-btn px-4 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 text-zinc-950 hover:bg-emerald-500 shadow-sm shadow-emerald-500/20 transition flex items-center space-x-1">
                             <i data-lucide="check" class="w-3.5 h-3.5"></i>
                             <span>Check In</span>
                         </button>
@@ -199,44 +201,44 @@
 </div>
 
 <!-- On-the-spot Walk-in Modal -->
-<div id="walkin-modal" class="fixed inset-0 z-50 hidden bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100">
-        <div class="flex justify-between items-center pb-3 border-b border-slate-100">
+<div id="walkin-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-[#121215] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-zinc-800">
+        <div class="flex justify-between items-center pb-3 border-b border-zinc-800">
             <div class="flex items-center space-x-2">
-                <div class="w-8 h-8 rounded-lg bg-emerald-50 text-emerald-600 flex items-center justify-center">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
                     <i data-lucide="user-plus" class="w-4 h-4"></i>
                 </div>
-                <h3 class="text-base font-bold text-slate-900">On-Spot Walk-in Registration</h3>
+                <h3 class="text-base font-bold text-white">On-Spot Walk-in Registration</h3>
             </div>
-            <button onclick="closeWalkinModal()" class="text-slate-400 hover:text-slate-600">
+            <button onclick="closeWalkinModal()" class="text-zinc-400 hover:text-white transition">
                 <i data-lucide="x" class="w-5 h-5"></i>
             </button>
         </div>
         <form onsubmit="handleWalkinSubmit(event)" class="mt-4 space-y-3">
             <input type="hidden" name="event_id" value="{{ event.id }}">
             <div>
-                <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Full Name *</label>
-                <input type="text" name="full_name" required placeholder="Guest Name" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Full Name *</label>
+                <input type="text" name="full_name" required placeholder="Guest Name" class="w-full px-3 py-2 bg-[#18181b] border border-zinc-800 rounded-xl text-xs sm:text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition">
             </div>
             <div>
-                <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Email Address *</label>
-                <input type="email" name="email" required placeholder="guest@example.com" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Phone Number</label>
+                <input type="tel" name="phone" placeholder="+1... or 9876543210" class="w-full px-3 py-2 bg-[#18181b] border border-zinc-800 rounded-xl text-xs sm:text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition">
             </div>
             <div>
-                <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Phone Number</label>
-                <input type="tel" name="phone" placeholder="+1..." class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Email Address</label>
+                <input type="email" name="email" placeholder="guest@example.com" class="w-full px-3 py-2 bg-[#18181b] border border-zinc-800 rounded-xl text-xs sm:text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition">
             </div>
             <div>
-                <label class="block text-[11px] font-bold text-slate-600 uppercase tracking-wider mb-1">Organization / Affiliation</label>
-                <input type="text" name="organization" placeholder="Company / College" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs sm:text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1">Organization / Affiliation</label>
+                <input type="text" name="organization" placeholder="Company / College" class="w-full px-3 py-2 bg-[#18181b] border border-zinc-800 rounded-xl text-xs sm:text-sm text-zinc-100 focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition">
             </div>
             <div class="flex items-center space-x-2 pt-2">
-                <input type="checkbox" name="auto_checkin" id="walkin-autocheck" checked class="w-4 h-4 text-emerald-600 rounded">
-                <label for="walkin-autocheck" class="text-xs font-semibold text-slate-700">Check in immediately upon registration</label>
+                <input type="checkbox" name="auto_checkin" id="walkin-autocheck" checked class="w-4 h-4 text-amber-500 bg-zinc-900 border-zinc-700 rounded focus:ring-amber-500">
+                <label for="walkin-autocheck" class="text-xs font-semibold text-zinc-300">Check in immediately upon registration</label>
             </div>
-            <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
-                <button type="button" onclick="closeWalkinModal()" class="px-4 py-2 text-xs font-semibold rounded-xl text-slate-600 hover:bg-slate-100">Cancel</button>
-                <button type="submit" class="px-4 py-2 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-md shadow-emerald-600/20">Register & Check In</button>
+            <div class="flex justify-end space-x-2 pt-3 border-t border-zinc-800">
+                <button type="button" onclick="closeWalkinModal()" class="px-4 py-2 text-xs font-semibold rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Cancel</button>
+                <button type="submit" class="px-4 py-2 text-xs font-bold rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-zinc-950 shadow-md shadow-amber-500/20 transition">Register & Check In</button>
             </div>
         </form>
     </div>
@@ -296,14 +298,14 @@
             }
             isScannerRunning = false;
             btn.textContent = 'Start Scanner';
-            btn.className = 'px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition';
+            btn.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 shadow-sm shadow-emerald-500/20 transition';
             placeholder.classList.remove('hidden');
             reticle.classList.add('hidden');
         } else {
             placeholder.classList.add('hidden');
             reticle.classList.remove('hidden');
             btn.textContent = 'Stop Scanner';
-            btn.className = 'px-3 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-700 text-white shadow-sm transition';
+            btn.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl bg-rose-600 hover:bg-rose-500 text-white shadow-sm transition';
 
             html5QrCode = new Html5Qrcode("qr-reader");
             const config = { fps: 10, qrbox: { width: 250, height: 250 } };
@@ -320,7 +322,7 @@
                 placeholder.classList.remove('hidden');
                 reticle.classList.add('hidden');
                 btn.textContent = 'Start Scanner';
-                btn.className = 'px-3 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm transition';
+                btn.className = 'px-3.5 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 hover:bg-emerald-500 text-zinc-950 shadow-sm shadow-emerald-500/20 transition';
                 showToast('Unable to open camera. Please grant camera permission or use manual code entry.', 'error');
             }
         }
@@ -400,25 +402,25 @@
 
         card.classList.remove('hidden');
         if (type === 'success') {
-            card.className = 'p-4 rounded-2xl border border-emerald-200 bg-emerald-50/70 transition-all';
-            badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-white';
-            icon.className = 'w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0';
+            card.className = 'p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 transition-all';
+            badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-emerald-600 text-zinc-950 uppercase';
+            icon.className = 'w-10 h-10 rounded-xl bg-emerald-600 text-zinc-950 flex items-center justify-center shrink-0';
             icon.innerHTML = `<i data-lucide="user-check" class="w-5 h-5"></i>`;
         } else if (type === 'warning') {
-            card.className = 'p-4 rounded-2xl border border-amber-200 bg-amber-50/70 transition-all';
-            badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-amber-600 text-white';
-            icon.className = 'w-10 h-10 rounded-xl bg-amber-600 text-white flex items-center justify-center shrink-0';
+            card.className = 'p-4 rounded-2xl border border-amber-500/30 bg-amber-500/10 transition-all';
+            badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-amber-500 text-zinc-950 uppercase';
+            icon.className = 'w-10 h-10 rounded-xl bg-amber-500 text-zinc-950 flex items-center justify-center shrink-0';
             icon.innerHTML = `<i data-lucide="alert-triangle" class="w-5 h-5"></i>`;
         } else {
-            card.className = 'p-4 rounded-2xl border border-slate-200 bg-slate-50 transition-all';
-            badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-slate-600 text-white';
-            icon.className = 'w-10 h-10 rounded-xl bg-slate-600 text-white flex items-center justify-center shrink-0';
+            card.className = 'p-4 rounded-2xl border border-zinc-700 bg-zinc-800/60 transition-all';
+            badge.className = 'px-2 py-0.5 text-[10px] font-bold rounded bg-zinc-700 text-white uppercase';
+            icon.className = 'w-10 h-10 rounded-xl bg-zinc-700 text-white flex items-center justify-center shrink-0';
             icon.innerHTML = `<i data-lucide="info" class="w-5 h-5"></i>`;
         }
 
         badge.textContent = message;
         name.textContent = attendee.full_name;
-        org.textContent = attendee.organization ? `${attendee.organization} (${attendee.role || 'Attendee'})` : attendee.email;
+        org.textContent = attendee.organization ? `${attendee.organization} (${attendee.role || 'Attendee'})` : (attendee.email || '');
         ticket.textContent = attendee.ticket_code;
         time.textContent = new Date().toLocaleTimeString();
         lucide.createIcons();
@@ -434,20 +436,20 @@
         const actionBtnContainer = row.querySelector('.action-btn').parentElement;
 
         if (newStatus === 'Attended') {
-            badge.className = 'status-badge px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200';
+            badge.className = 'status-badge px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30';
             badge.textContent = 'Attended';
             timeDiv.textContent = `Checked in at: ${attendee.checkin_at || 'Just now'}`;
             actionBtnContainer.innerHTML = `
-                <button onclick="toggleCheckin('${attendee.id}', 'checkout')" class="action-btn px-3 py-1.5 text-xs font-semibold rounded-xl bg-slate-100 text-slate-600 hover:bg-rose-50 hover:text-rose-700 transition">
+                <button onclick="toggleCheckin('${attendee.id}', 'checkout')" class="action-btn px-3 py-1.5 text-xs font-semibold rounded-xl bg-zinc-800 text-zinc-400 hover:bg-rose-500/10 hover:text-rose-400 border border-zinc-700/60 transition">
                     Undo
                 </button>
             `;
         } else {
-            badge.className = 'status-badge px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600';
+            badge.className = 'status-badge px-2 py-0.5 text-[10px] font-bold rounded-full bg-zinc-800 text-zinc-400 border border-zinc-700';
             badge.textContent = 'Registered';
             timeDiv.textContent = '';
             actionBtnContainer.innerHTML = `
-                <button onclick="toggleCheckin('${attendee.id}', 'checkin')" class="action-btn px-4 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 text-white hover:bg-emerald-700 shadow-sm shadow-emerald-600/20 transition flex items-center space-x-1">
+                <button onclick="toggleCheckin('${attendee.id}', 'checkin')" class="action-btn px-4 py-1.5 text-xs font-bold rounded-xl bg-emerald-600 text-zinc-950 hover:bg-emerald-500 shadow-sm shadow-emerald-500/20 transition flex items-center space-x-1">
                     <i data-lucide="check" class="w-3.5 h-3.5"></i>
                     <span>Check In</span>
                 </button>
@@ -471,10 +473,10 @@
     function setFilter(filter) {
         currentFilter = filter;
         document.querySelectorAll('#btn-tab-all, #btn-tab-absent, #btn-tab-attended').forEach(b => {
-            b.className = 'px-2.5 py-1 rounded-lg font-medium text-slate-600 hover:text-slate-900';
+            b.className = 'px-2.5 py-1 rounded-lg font-medium text-zinc-400 hover:text-white transition';
         });
         const activeBtn = document.getElementById(`btn-tab-${filter}`);
-        activeBtn.className = 'px-2.5 py-1 rounded-lg font-bold bg-white text-slate-900 shadow-xs';
+        activeBtn.className = 'px-2.5 py-1 rounded-lg font-bold bg-[#fbbf24] text-zinc-950 shadow-xs';
         filterKioskList();
     }
 
