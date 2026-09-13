@@ -93,34 +93,49 @@
                 <form id="registration-form" onsubmit="handleRegistration(event)" class="space-y-4">
                     <input type="hidden" name="event_id" value="{{ event.id }}">
 
-                    <!-- DYNAMIC FIELDS RENDERER -->
+                    <!-- 1. FULL NAME (Standard Field) -->
                     {% for f in fields %}
-                        {% if f.enabled %}
-                            {% if f.id == 'full_name' %}
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">{{ f.label }} *</label>
-                                    <div class="relative">
-                                        <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500"></i>
-                                        <input type="text" name="full_name" required placeholder="{{ f.placeholder or 'e.g. John Doe' }}" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-400 transition">
-                                    </div>
-                                </div>
-                            {% elif f.id == 'email' %}
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">{{ f.label }} *</label>
-                                    <div class="relative">
-                                        <i data-lucide="mail" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500"></i>
-                                        <input type="email" name="email" required placeholder="{{ f.placeholder or 'name@example.com' }}" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-400 transition">
-                                    </div>
-                                </div>
-                            {% elif f.id == 'phone' %}
-                                <div>
-                                    <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">{{ f.label }} {% if f.required %}*{% endif %}</label>
-                                    <div class="relative">
-                                        <i data-lucide="phone" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500"></i>
-                                        <input type="tel" name="phone" {% if f.required %}required{% endif %} placeholder="{{ f.placeholder or '+1 555-0199 or 9876543210' }}" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-400 transition">
-                                    </div>
-                                </div>
-                            {% elif f.id == 'organization' or f.id == 'School' %}
+                        {% if f.id == 'full_name' and f.enabled %}
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">{{ f.label }} *</label>
+                            <div class="relative">
+                                <i data-lucide="user" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500"></i>
+                                <input type="text" name="full_name" required placeholder="{{ f.placeholder or 'e.g. John Doe' }}" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-400 transition">
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- 2. PHONE (Standard Field) -->
+                    {% for f in fields %}
+                        {% if f.id == 'phone' and f.enabled %}
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">{{ f.label }} {% if f.required %}*{% endif %}</label>
+                            <div class="relative">
+                                <i data-lucide="phone" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500"></i>
+                                <input type="tel" name="phone" {% if f.required %}required{% endif %} placeholder="{{ f.placeholder or '+1 555-0199 or 9876543210' }}" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-400 transition">
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- 3. EMAIL (Standard Field) -->
+                    {% for f in fields %}
+                        {% if f.id == 'email' and f.enabled %}
+                        <div>
+                            <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">{{ f.label }} {% if f.required %}*{% endif %}</label>
+                            <div class="relative">
+                                <i data-lucide="mail" class="w-4 h-4 absolute left-3.5 top-3.5 text-slate-500"></i>
+                                <input type="email" name="email" {% if f.required %}required{% endif %} placeholder="{{ f.placeholder or 'name@example.com' }}" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-800/80 border border-slate-700/80 rounded-xl text-sm text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/60 focus:border-amber-400 transition">
+                            </div>
+                        </div>
+                        {% endif %}
+                    {% endfor %}
+
+                    <!-- 4. REMAINING STANDARD & CUSTOM FIELDS -->
+                    {% for f in fields %}
+                        {% if f.enabled and f.id not in ['full_name', 'phone', 'email'] %}
+                            {% if f.id == 'organization' or f.id == 'School' %}
                                 <div>
                                     <label class="block text-[11px] font-bold text-slate-300 uppercase tracking-wider mb-1.5">{{ f.label }} {% if f.required %}*{% endif %}</label>
                                     <div class="relative">
