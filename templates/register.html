@@ -238,8 +238,11 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify(payload)
                 });
-                const result = await res.json();
+               const result = await res.json();
                 if (res.ok) {
+                    if (result.is_existing) {
+                        alert("You are already registered for this event! Redirecting to your ticket pass...");
+                    }
                     window.location.href = `/tickets/${result.ticket_code}`;
                 } else {
                     errBox.textContent = result.detail || 'Registration failed. Please try again.';
