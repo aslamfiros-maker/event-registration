@@ -72,61 +72,60 @@
 </div>
 
     <!-- Events List Section -->
-    <div class="bg-white rounded-3xl border border-slate-200/80 shadow-sm overflow-hidden">
-        <div class="p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-                <h2 class="text-lg font-bold text-slate-900">Your Events</h2>
-                <p class="text-xs text-slate-500">Select an event to open its attendance kiosk, follow-up hub, or final report</p>
-            </div>
-            <div class="flex items-center space-x-2">
-                <input type="text" id="event-search" oninput="filterEvents()" placeholder="Search events..." class="px-3.5 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-brand-500 focus:bg-white transition">
+<div class="bg-[#121215] rounded-3xl border border-zinc-800 shadow-xl shadow-black/50 overflow-hidden">
+    <!-- Header -->
+    <div class="p-6 border-b border-zinc-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+            <h2 class="text-lg font-bold text-white tracking-tight">Your Events</h2>
+            <p class="text-xs text-zinc-400 mt-0.5">Select an event to open its attendance kiosk, follow-up hub, or final report</p>
+        </div>
+        <div class="flex items-center space-x-2">
+            <div class="relative">
+                <i data-lucide="search" class="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2"></i>
+                <input type="text" id="event-search" oninput="filterEvents()" placeholder="Search events..." class="pl-9 pr-3.5 py-2 text-sm bg-[#18181b] border border-zinc-800 text-zinc-200 placeholder-zinc-500 rounded-xl focus:outline-none focus:ring-1 focus:ring-amber-500 focus:border-amber-500 transition">
             </div>
         </div>
+    </div>
 
-        {% if events %}
-        <div class="divide-y divide-slate-100" id="events-list">
-            {% for ev in events %}
-            <div class="p-6 hover:bg-slate-50/70 transition flex flex-col lg:flex-row lg:items-center justify-between gap-6 event-card" data-title="{{ ev.title|lower }}" data-category="{{ ev.category|lower }}">
-                <div class="flex items-start space-x-4">
-                    <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-100 to-slate-200 border border-slate-300/60 flex flex-col items-center justify-center shrink-0 text-slate-700">
-                        <span class="text-[10px] font-bold uppercase tracking-wider text-brand-600">{{ ev.event_date[5:7] }}</span>
-                        <span class="text-lg font-extrabold leading-none">{{ ev.event_date[8:10] }}</span>
-                        <span class="text-[9px] font-medium text-slate-400">{{ ev.event_date[:4] }}</span>
-                    </div>
-                    <div>
-                        <div class="flex flex-wrap items-center gap-2">
-                            <h3 class="text-base font-bold text-slate-900 hover:text-brand-600 transition">
-                                <a href="/events/{{ ev.id }}">{{ ev.title }}</a>
-                            </h3>
-                            <span class="px-2.5 py-0.5 text-xs font-semibold rounded-full 
-                                {% if ev.status == 'Upcoming' %}bg-blue-50 text-blue-700 border border-blue-200
-                                {% elif ev.status == 'Active' %}bg-emerald-50 text-emerald-700 border border-emerald-200 animate-pulse
-                                {% elif ev.status == 'Completed' %}bg-slate-100 text-slate-700 border border-slate-300
-                                {% else %}bg-rose-50 text-rose-700 border border-rose-200{% endif %}">
-                                {{ ev.status }}
-                            </span>
-                            <span class="px-2 py-0.5 text-xs font-medium rounded-full bg-slate-100 text-slate-600">
-                                {{ ev.category }}
-                            </span>
-                        </div>
-                        <div class="flex flex-wrap items-center gap-y-1 gap-x-4 text-xs text-slate-500 mt-2">
-                            <span class="flex items-center space-x-1">
-                                <i data-lucide="clock" class="w-3.5 h-3.5"></i>
-                                <span>{{ ev.start_time }} - {{ ev.end_time }}</span>
-                            </span>
-                            <span class="flex items-center space-x-1">
-                                <i data-lucide="map-pin" class="w-3.5 h-3.5"></i>
-                                <span>{{ ev.venue }}</span>
-                            </span>
-                            <span class="flex items-center space-x-1 font-semibold text-slate-700">
-                                <i data-lucide="users" class="w-3.5 h-3.5 text-brand-600"></i>
-                                <span>{{ ev.registered_count }} / {{ ev.max_capacity }} Registered</span>
-                            </span>
-                        </div>
-                    </div>
+    <!-- Events Container -->
+    <div class="divide-y divide-zinc-800/60" id="events-container">
+        {% for ev in events %}
+        <div class="p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-6 hover:bg-[#18181b]/50 transition">
+            <!-- Event Info Left -->
+            <div class="flex items-start sm:items-center space-x-4">
+                <!-- Date Badge -->
+                <div class="w-14 h-14 rounded-2xl bg-[#18181b] border border-zinc-800 flex flex-col items-center justify-center shrink-0 shadow-inner">
+                    <span class="text-[10px] font-bold uppercase tracking-wider text-amber-400">{{ ev.event_date[5:7] }}</span>
+                    <span class="text-lg font-extrabold text-white leading-tight">{{ ev.event_date[8:10] }}</span>
+                    <span class="text-[9px] text-zinc-500 font-medium">{{ ev.event_date[:4] }}</span>
                 </div>
 
-                <!-- Event Action Hub -->
+                <div class="space-y-1.5">
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h3 class="text-base font-bold text-white tracking-tight uppercase">{{ ev.title }}</h3>
+                        <span class="px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20">
+                            {{ ev.category or 'Social Event' }}
+                        </span>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-zinc-400 font-medium">
+                        <span class="flex items-center">
+                            <i data-lucide="clock" class="w-3.5 h-3.5 mr-1 text-zinc-500"></i>
+                            {{ ev.start_time or '00:00' }} - {{ ev.end_time or '00:00' }}
+                        </span>
+                        <span class="flex items-center">
+                            <i data-lucide="map-pin" class="w-3.5 h-3.5 mr-1 text-zinc-500"></i>
+                            {{ ev.venue or 'TBD' }}
+                        </span>
+                        <span class="flex items-center text-zinc-300">
+                            <i data-lucide="users" class="w-3.5 h-3.5 mr-1 text-amber-400"></i>
+                            {{ ev.registered_count }}/{{ ev.max_capacity }} Registered
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            
+<!-- Event Action Hub -->
 <div class="flex flex-wrap items-center gap-2">
     <button onclick="copyRegLink('{{ ev.id }}')" title="Copy Public Pre-Registration Link" class="px-3 py-2 text-xs font-semibold rounded-xl bg-slate-100 text-slate-700 hover:bg-slate-200 transition flex items-center space-x-1.5">
         <i data-lucide="link" class="w-3.5 h-3.5"></i>
