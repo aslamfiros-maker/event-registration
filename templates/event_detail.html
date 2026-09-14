@@ -248,3 +248,74 @@
     }
 </script>
 {% endblock %}
+
+<!-- Excel Import Modal -->
+<div id="import-modal" class="fixed inset-0 z-50 hidden bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
+    <div class="bg-[#121215] rounded-3xl max-w-md w-full p-6 shadow-2xl border border-zinc-800">
+        <div class="flex justify-between items-center pb-3 border-b border-zinc-800">
+            <div class="flex items-center space-x-2">
+                <div class="w-8 h-8 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/20 flex items-center justify-center">
+                    <i data-lucide="file-spreadsheet" class="w-4 h-4"></i>
+                </div>
+                <h3 class="text-base font-bold text-white">Import Attendees from Excel</h3>
+            </div>
+            <button onclick="closeImportModal()" class="text-zinc-400 hover:text-white transition">
+                <i data-lucide="x" class="w-5 h-5"></i>
+            </button>
+        </div>
+        <form id="import-form" onsubmit="submitExcelImport(event)" class="mt-4 space-y-4">
+            <div>
+                <label class="block text-[11px] font-bold text-zinc-300 uppercase tracking-wider mb-1.5">Select Excel File (.xlsx)</label>
+                <input type="file" id="excel-file-input" accept=".xlsx, .xls, .csv" required class="w-full text-xs text-zinc-400 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-semibold file:bg-amber-500/10 file:text-amber-300 hover:file:bg-amber-500/20 file:transition">
+                <p class="text-[11px] text-zinc-500 mt-2">Your sheet should include columns named: <strong class="text-zinc-300">Name</strong>, <strong class="text-zinc-300">Email</strong>, <strong class="text-zinc-300">Phone</strong>, and <strong class="text-zinc-300">Organization</strong>.</p>
+            </div>
+            <div class="flex justify-end space-x-2 pt-3 border-t border-zinc-800">
+                <button type="button" onclick="closeImportModal()" class="px-4 py-2 text-xs font-semibold rounded-xl text-zinc-400 hover:text-white hover:bg-zinc-800 transition">Cancel</button>
+                <button type="submit" id="import-submit-btn" class="px-4 py-2 text-xs font-bold rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-zinc-950 shadow-md shadow-amber-500/20 transition">Upload & Import</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    function openImportModal() {
+        document.getElementById('import-modal').classList.remove('hidden');
+    }
+    function closeImportModal() {
+        document.getElementById('import-modal').classList.add('hidden');
+    }
+
+    async function submitExcelImport(e) {
+        e.preventDefault();
+        const fileInput = document.getElementById('excel-file-input');
+        const btn = document.getElementById('import-submit-btn');
+        if (!fileInput.files[0]) return;
+
+        const formData = new FormData();
+        formData.append('file', fileInput.files[0]);
+
+        btn.disabled = true;
+        btn.textContent = 'Importing...';
+
+        try {
+            const res = await fetch(`/api/events/{{ event.id }}/import-excel`, {
+                method: 'POST',
+                body: formData
+            });
+            const result = await res.json();
+            if (res.ok) {
+                showToast(`Imported: ${result.imported} | Skipped Duplicates: ${result.duplicates_skipped}`, 'success');
+                closeImportModal();
+                setTimeout(() => window.location.reload(), 1000);
+            } else {
+                showToast(result.detail || 'Import failed', 'error');
+                btn.disabled = false;
+                btn.textContent = 'Upload & Import';
+            }
+        } catch (err) {
+            showToast('Server connection error during import', 'error');
+            btn.disabled = false;
+            btn.textContent = 'Upload & Import';
+        }
+    }
+</script>
