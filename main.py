@@ -1,12 +1,14 @@
 import os
+import io
 import json
 import psycopg2
 from psycopg2.extras import RealDictCursor
 from datetime import datetime
 from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
+import pandas as pd
 
-from fastapi import FastAPI, Request, HTTPException, Form, Depends, status
+from fastapi import FastAPI, Request, HTTPException, Form, Depends, status, UploadFile, File
 from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -23,7 +25,7 @@ from services import (
 )
 import sample_data
 
-# 1. ഡാറ്റാബേസ് കോൺഫിഗറേഷൻ
+# 1. Database Configuration
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 def get_db_connection():
@@ -86,13 +88,13 @@ def init_db():
     except Exception as e:
         print(f"Error initializing database: {e}")
 
-# 2. FastAPI ആപ്പ്
+# 2. FastAPI App
 app = FastAPI(title="Albirr Events - Event Operations Platform")
 
 ADMIN_USERNAME = os.getenv("ADMIN_USERNAME", "admin")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "Admin@123")
 
-# 3. സ്റ്റാറ്റിക് ഫോൾഡറും ടെംപ്ലേറ്റുകളും
+# 3. Static & Templates
 STATIC_DIR = os.path.join(os.path.dirname(__file__), "static")
 os.makedirs(STATIC_DIR, exist_ok=True)
 app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
@@ -100,12 +102,12 @@ app.mount("/static", StaticFiles(directory=STATIC_DIR), name="static")
 templates_dir = os.path.join(os.path.dirname(__file__), "templates")
 templates = Jinja2Templates(directory=templates_dir)
 
-# 4. ആപ്പ് സ്റ്റാർട്ടപ്പ്
+# 4. App Startup
 @app.on_event("startup")
 def startup_event():
     init_db()
 
-# 5. ഹെൽപ്പർ ഫംഗ്ഷനുകൾ
+# 5. Helper Functions
 def get_event_by_id(event_id: int):
     conn = get_db_connection()
     cur = conn.cursor()
@@ -156,11 +158,8 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
-    # അഡ്മിൻ ഇതിനകം ലോഗിൻ ചെയ്തിട്ടുണ്ടെങ്കിൽ നേരിട്ട് ഡാഷ്‌ബോർഡിലേക്ക് വിടുന്നു
     if request.cookies.get("admin_session") == "authenticated":
         return RedirectResponse(url="/dashboard", status_code=303)
-    
-    # ലോഗിൻ ചെയ്തിട്ടില്ലെങ്കിൽ നേരിട്ട് അഡ്മിൻ ലോഗിൻ പേജ് കാണിക്കുന്നു
     return templates.TemplateResponse(
         request=request, 
         name="admin_login.html", 
@@ -218,7 +217,6 @@ def index_page(request: Request):
     total_abs = 0
 
     for ev in events_raw:
-        # datetime.date ഒബ്ജക്റ്റിനെ Jinja2-ന് വായിക്കാൻ പറ്റുന്ന വിധം String ആക്കി മാറ്റുന്നു
         if ev.get("event_date"):
             ev["event_date"] = str(ev["event_date"])
 
@@ -246,6 +244,7 @@ def index_page(request: Request):
             "active_tab": "dashboard"
         }
     )
+
 @app.get("/events/{event_id}", response_class=HTMLResponse)
 def event_overview_page(request: Request, event_id: int):
     event = get_event_by_id(event_id)
@@ -341,12 +340,14 @@ def checkin_kiosk_page(request: Request, event_id: int):
     if not event:
         raise HTTPException(status_code=404, detail="Event not found")
 
+    fields = get_event_form_fields(event)
     metrics = calculate_event_metrics(event_id)
     return templates.TemplateResponse(
         request=request,
         name="checkin.html",
         context={
             "event": event,
+            "fields": fields,
             "attendees": metrics["attendees"],
             "total_count": metrics["total"],
             "attended_count": metrics["attended"],
@@ -510,7 +511,6 @@ async def delete_event(request: Request, event_id: int):
         
     return RedirectResponse(url="/dashboard", status_code=303)
 
-
 # -------------------------------------------------------------
 # REST API ENDPOINTS
 # -------------------------------------------------------------
@@ -590,7 +590,7 @@ def register_attendee(data: AttendeeRegister):
 
     custom_data_json = json.dumps(custom_data)
 
-    # 2. Safely extract and clean inputs (Prevents AttributeError if None)
+    # 2. Safely extract and clean inputs
     clean_email = data.email.strip().lower() if data.email else ""
     clean_phone = data.phone.strip() if data.phone else ""
     clean_name = data.full_name.strip() if data.full_name else ""
@@ -617,14 +617,13 @@ def register_attendee(data: AttendeeRegister):
             existing = cur.fetchone()
 
             if existing:
-                # Direct match found: return the existing ticket
                 return {
                     "message": "Already registered", 
                     "ticket_code": existing["ticket_code"],
                     "is_existing": True
                 }
 
-        # 4. If not found, insert new registration into database
+        # 4. Insert new registration into database
         ticket_code = generate_ticket_code(data.event_id)
         cur.execute("""
             INSERT INTO attendees (
@@ -653,6 +652,7 @@ def register_attendee(data: AttendeeRegister):
     finally:
         cur.close()
         conn.close()
+
 @app.post("/api/walkin")
 def register_walkin(data: WalkinRegister):
     event = get_event_by_id(data.event_id)
@@ -674,7 +674,7 @@ def register_walkin(data: WalkinRegister):
         data.event_id,
         ticket_code,
         data.full_name.strip(),
-        data.email.strip().lower(),
+        data.email.strip().lower() if data.email else "",
         data.phone.strip() if data.phone else "",
         data.organization.strip() if data.organization else "",
         data.role.strip() if data.role else "",
@@ -813,6 +813,103 @@ def export_event_excel(event_id: int):
         media_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
         headers={"Content-Disposition": f'attachment; filename="{filename}"'}
     )
+
+@app.post("/api/events/{event_id}/import-excel")
+async def import_attendees_excel(event_id: int, file: UploadFile = File(...)):
+    event = get_event_by_id(event_id)
+    if not event:
+        raise HTTPException(status_code=404, detail="Event not found")
+    
+    contents = await file.read()
+    try:
+        df = pd.read_excel(io.BytesIO(contents))
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=f"Invalid Excel file: {str(e)}")
+    
+    # Standardize column headers to lowercase
+    df.columns = [str(c).strip().lower() for c in df.columns]
+    
+    name_col = next((c for c in df.columns if 'name' in c), None)
+    email_col = next((c for c in df.columns if 'email' in c), None)
+    phone_col = next((c for c in df.columns if 'phone' in c or 'mobile' in c), None)
+    org_col = next((c for c in df.columns if 'org' in c or 'company' in c or 'school' in c), None)
+
+    if not name_col:
+        raise HTTPException(status_code=400, detail="Excel file must contain a 'Name' column.")
+
+    conn = get_db_connection()
+    cur = conn.cursor()
+
+    # Query initial attendee count once to avoid running queries inside the loop
+    cur.execute("SELECT COUNT(*) FROM attendees WHERE event_id = %s;", (event_id,))
+    current_count = cur.fetchone()["count"]
+
+    success_count = 0
+    duplicate_count = 0
+    error_count = 0
+
+    for _, row in df.iterrows():
+        # Enforce seat capacity limit
+        if current_count >= event["max_capacity"]:
+            break
+
+        full_name = str(row[name_col]).strip() if pd.notna(row[name_col]) else ""
+        if not full_name or full_name.lower() == 'nan':
+            error_count += 1
+            continue
+        
+        email = str(row[email_col]).strip().lower() if email_col and pd.notna(row[email_col]) else ""
+        if email == 'nan': email = ""
+        
+        # Clean phone numbers (removes float '.0' parsed by pandas)
+        phone = str(row[phone_col]).strip() if phone_col and pd.notna(row[phone_col]) else ""
+        if phone.endswith(".0"):
+            phone = phone[:-2]
+        if phone == 'nan': phone = ""
+        
+        org = str(row[org_col]).strip() if org_col and pd.notna(row[org_col]) else ""
+        if org == 'nan': org = ""
+
+        # Check for duplicates using Phone or Email
+        conditions = []
+        params = [event_id]
+        if email:
+            conditions.append("LOWER(email) = %s")
+            params.append(email)
+        if phone:
+            conditions.append("phone = %s")
+            params.append(phone)
+
+        exists = False
+        if conditions:
+            cur.execute(f"SELECT id FROM attendees WHERE event_id = %s AND ({' OR '.join(conditions)});", tuple(params))
+            if cur.fetchone():
+                exists = True
+
+        if exists:
+            duplicate_count += 1
+            continue
+
+        # Insert new attendee record
+        ticket_code = generate_ticket_code(event_id)
+        cur.execute("""
+            INSERT INTO attendees (event_id, ticket_code, full_name, email, phone, organization, role, notes, status, is_walkin, custom_data)
+            VALUES (%s, %s, %s, %s, %s, %s, '', '', 'Registered', 0, '{}');
+        """, (event_id, ticket_code, full_name, email, phone, org))
+        conn.commit()
+        
+        success_count += 1
+        current_count += 1
+
+    cur.close()
+    conn.close()
+
+    return {
+        "message": "Import completed successfully",
+        "imported": success_count,
+        "duplicates_skipped": duplicate_count,
+        "errors": error_count
+    }
 
 @app.post("/api/sample-data")
 def populate_sample_data():
