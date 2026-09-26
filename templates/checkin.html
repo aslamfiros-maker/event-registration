@@ -20,18 +20,20 @@
             <p class="text-xs text-zinc-400 mt-0.5">Scan attendee QR passes or search names for rapid entry marking</p>
         </div>
 
-        <!-- Quick Walk-in Button -->
+<!-- Quick Walk-in Button -->
         <div class="flex items-center space-x-3">
+            {% if current_user and current_user.role in ['admin', 'staff'] %}
             <button onclick="openWalkinModal()" class="px-4 py-2.5 rounded-xl bg-[#fbbf24] hover:bg-[#f59e0b] text-zinc-950 text-xs sm:text-sm font-bold shadow-md shadow-amber-500/20 transition flex items-center space-x-2">
                 <i data-lucide="user-plus" class="w-4 h-4 text-zinc-950 font-black"></i>
                 <span>+ On-Spot Walk-in</span>
             </button>
+            {% endif %}
+
             <a href="/events/{{ event.id }}" class="px-3.5 py-2.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white border border-zinc-700/60 text-xs sm:text-sm font-semibold transition flex items-center space-x-1.5">
                 <i data-lucide="arrow-left" class="w-4 h-4 text-zinc-400"></i>
                 <span>Exit Kiosk</span>
             </a>
         </div>
-    </div>
 
     <!-- Live Attendance Metrics Counter Bar -->
     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4" id="kpi-bar">
