@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
+from sqlalchemy import Column, Integer, String, Boolean
 
 class FormFieldConfig(BaseModel):
     id: str
@@ -73,3 +74,16 @@ class FollowupUpdate(BaseModel):
     channel: Optional[str] = "WhatsApp"
     reason_category: Optional[str] = "Not Specified"
     notes: Optional[str] = ""
+
+class User(Base):
+    __tablename__ = "users"
+
+    id = Column(Integer, primary_key=True, index=True)
+    username = Column(String, unique=True, index=True, nullable=False)
+    hashed_password = Column(String, nullable=False)
+    role = Column(String, default="staff")  # e.g., 'admin', 'staff', 'viewer'
+    is_active = Column(Boolean, default=True)
+    
+    # Specific permission flags if roles aren't granular enough:
+    can_checkin = Column(Boolean, default=True)
+    can_edit_events = Column(Boolean, default=False)
