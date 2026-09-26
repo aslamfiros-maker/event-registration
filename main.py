@@ -8,7 +8,7 @@ from typing import Optional, List, Dict, Any
 from pydantic import BaseModel
 import pandas as pd
 
-from fastapi import FastAPI, Request, HTTPException, Form, Depends, status, UploadFile, File
+from fastapi import Depends, FastAPI, Request, HTTPException, Form, Depends, status, UploadFile, File
 from fastapi.responses import RedirectResponse, HTMLResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
@@ -152,9 +152,41 @@ def get_event_form_fields(event: dict) -> List[Dict[str, Any]]:
             pass
     return []
 
+# Dependency to check if user has permission
+def require_admin(current_user = Depends(get_current_user)):
+    if current_user.role != "admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN, 
+            detail="Operation not permitted"
+        )
+    return current_user
+
+
 # -------------------------------------------------------------
 # AUTH & HTML PAGE ROUTES
 # -------------------------------------------------------------
+# Route to create user with specific permissions
+@app.post("/admin/users/create")
+def create_user(
+    username: str, 
+    password: str, 
+    role: str = "staff", 
+    admin: User = Depends(require_admin), 
+    db = Depends(get_db)
+):
+    existing_user = db.query(User).filter(User.username == username).first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Username already exists")
+    
+    new_user = User(
+        username=username,
+        hashed_password=get_password_hash(password),
+        role=role
+    )
+    db.add(new_user)
+    db.commit()
+    return {"status": "User created successfully", "username": username, "role": role}
+
 
 @app.get("/", response_class=HTMLResponse)
 async def root(request: Request):
