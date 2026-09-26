@@ -75,7 +75,7 @@ class FollowupUpdate(BaseModel):
     reason_category: Optional[str] = "Not Specified"
     notes: Optional[str] = ""
 
-class User(Base):
+class User(BaseModel):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
