@@ -1,0 +1,19 @@
+<form action="/admin/users/create" method="POST" class="space-y-4">
+    <div>
+        <label class="block text-xs font-semibold text-slate-700">Username</label>
+        <input type="text" name="username" required class="w-full rounded-lg border border-slate-300 p-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-slate-700">Password</label>
+        <input type="password" name="password" required class="w-full rounded-lg border border-slate-300 p-2 text-sm">
+    </div>
+    <div>
+        <label class="block text-xs font-semibold text-slate-700">Role / Permission</label>
+        <select name="role" class="w-full rounded-lg border border-slate-300 p-2 text-sm">
+            <option value="viewer">Viewer (View-only)</option>
+            <option value="staff" selected>Staff (Check-in attendees)</option>
+            <option value="admin">Admin (Full Access)</option>
+        </select>
+    </div>
+    <button type="submit" class="bg-slate-900 text-white rounded-lg px-4 py-2 text-sm">Create User</button>
+</form>
